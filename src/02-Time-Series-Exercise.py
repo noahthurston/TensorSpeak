@@ -44,7 +44,7 @@ milk
 
 
 milk.plot()
-plt.show()
+# plt.show()
 
 
 # ### Train Test Split
@@ -192,25 +192,40 @@ saver = tf.train.Saver()
 # ** Run a tf.Session that trains on the batches created by your next_batch function. Also add an a loss evaluation for every 100 training iterations. Remember to save your model after you are done training. **
 
 with tf.Session() as sess:
-    # CODE HERE!
     sess.run(init)
-    
-    print("starting")
-    
+
+    mse_list = np.zeros(int(num_iterations / 100)+1)
+    print(mse_list)
+
     for iteration in range(num_iterations):
-        
-        #              def next_batch(training_data,batch_size,steps):
+        iter_div = int(iteration / 100)
+
         X_batch, y_batch = next_batch(training_set, batch_size, num_timesteps)
         sess.run(train, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
-        
+
         if iteration % 100 == 0:
-            
-            mse = loss.eval(feed_dict={X_placeholder:X_batch, y_placeholder: y_batch})
-            print(iteration, "\tMSE:", mse)
+
+            mse_list[iter_div] = loss.eval(feed_dict={X_placeholder:X_batch, y_placeholder: y_batch})
+
+            if mse_list[iter_div-1] < mse_list[iter_div]:
+                print("%f < %f" % (mse_list[iter_div-1],mse_list[iter_div]))
+                learning_rate = learning_rate/2
+                print("Halving learning rate: %f to %f" % (learning_rate*2,learning_rate))
+
+            print(iteration, "\tMSE:", mse_list[iter_div])
+            # print(mse_list)
     
     # Save Model for Later
     saver.save(sess, "../data/ex_time_series_model_min")
 
+x_plt = np.arange(0, int(num_iterations/100)+1, 1).reshape(-1,1)
+y_plt = mse_list.reshape(-1,1)
+print(x_plt)
+print(y_plt)
+
+plt.show()
+plt.plot(x_plt, y_plt, "r-")
+plt.show()
 
 
 # ______
