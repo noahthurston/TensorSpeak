@@ -47,8 +47,6 @@ milk.plot()
 plt.show()
 
 
-# ___
-
 # ### Train Test Split
 # 
 # ** Let's attempt to predict a year's worth of data. (12 months or 12 steps into the future) **
@@ -62,11 +60,6 @@ len(milk)
 training_set = milk.head(len(milk)-12)
 
 testing_set = milk.tail(12)
-
-# training_set
-
-# testing_set
-
 
 
 # ### Scale the Data
