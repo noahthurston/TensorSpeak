@@ -200,7 +200,14 @@ with tf.Session() as sess:
     for iteration in range(num_iterations):
         iter_div = int(iteration / 100)
 
+
+
         X_batch, y_batch = next_batch(training_set, batch_size, num_timesteps)
+
+        print("Print X and y batch")
+        print(X_batch)
+        print(y_batch)
+
         sess.run(train, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
 
         if iteration % 100 == 0:
