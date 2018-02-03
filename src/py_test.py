@@ -2,14 +2,17 @@ import numpy as np
 from collections import namedtuple
 
 
-MyModelDesc = {"num_io":4,
-           "num_timesteps":6,
-           "num_neurons_inlayer":100,
-           "learning_rate":0.030,
-           "num_iterations":1000,
-           "batch_size":1}
+vocab_size = 10
+target_index = 3
+vectorized_sent = [1 if x == target_index else 0 for x in range(vocab_size)]
+print(vectorized_sent)
+
 
 """
+
+
+
+
 ## num inputs and outputs = 5, which would be the same as the vocab size
 num_inputs = 4
 num_outputs = 4
@@ -32,7 +35,34 @@ goal:
   [0,0,1,0]
   [0,1,0,0]
   [1,0,0,0]]]
-"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MyModelDesc = {"num_io":4,
+           "num_timesteps":6,
+           "num_neurons_inlayer":100,
+           "learning_rate":0.030,
+           "num_iterations":1000,
+           "batch_size":1}
+
+
+
+
+
 
 
 
@@ -83,3 +113,4 @@ for iteration in range(10):
 
 #    X_set = full_set[:,:-1].reshape(-1, steps, 1)
 #    y_set = full_set[:,1:].reshape(-1, steps, 1)
+"""

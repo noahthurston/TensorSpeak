@@ -1,7 +1,6 @@
-### rnn to predict basic multi-input series data
+### rnn to predict the next y coord of a simple wave
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import sys
 
@@ -18,40 +17,30 @@ MyModelDesc = {"num_io":4,
            "num_iterations":1000,
            "batch_size":1}
 
-# ** Create Placeholders for X and y. (You can change the variable names if you want). The shape for these placeholders should be [None,num_time_steps-1,num_inputs] and [None, num_time_steps-1, num_outputs] The reason we use num_time_steps-1 is because each of these will be one step shorter than the original time steps size, because we are training the RNN network to predict one point into the future based on the input sequence.**
-
+# create placeholders for current timestep data (X_placeholder) and next timestep data (y_placeholder)
 X_placeholder = tf.placeholder(tf.float32, [None, MyModelDesc["num_timesteps"], MyModelDesc["num_io"]])
 y_placeholder = tf.placeholder(tf.float32, [None, MyModelDesc["num_timesteps"], MyModelDesc["num_io"]])
 
-# ** Now create the RNN Layer, you have complete freedom over this, use tf.contrib.rnn and choose anything you want, OutputProjectionWrappers, BasicRNNCells, BasicLSTMCells, MultiRNNCell, GRUCell etc... Keep in mind not every combination will work well! (If in doubt, the solutions used an Outputprojection Wrapper around a basic LSTM cell with relu activation.**
-
+# create RNN layer, in this case a LSTM with relu activation
 cell = tf.contrib.rnn.OutputProjectionWrapper(
     tf.contrib.rnn.BasicLSTMCell(num_units=MyModelDesc["num_neurons_inlayer"], activation=tf.nn.relu),output_size=MyModelDesc["num_io"])
 
-# tf.nn.softmax_cross_entropy_with_logits()
-
 # ** Now pass in the cells variable into tf.nn.dynamic_rnn, along with your first placeholder (X)**
 
+# outputs are what is calculated by the cell, state is the current LSTM state
 outputs, states = tf.nn.dynamic_rnn(cell, X_placeholder, dtype=tf.float32)
 
-# ### Loss Function and Optimizer
-#
-# ** Create a Mean Squared Error Loss Function and use it to minimize an AdamOptimizer, remember to pass in your learning rate. **
-
-
-# loss = tf.reduce_mean(tf.square(outputs - y_placeholder))  # calc MSE
+# use a softmax with cross entropy since the outputs are a vector of probabilities that sum to 1
 loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=outputs,labels=y_placeholder))
 
-
-
+# create optimizer tha trains at the given learning_rate
 optimizer = tf.train.AdamOptimizer(learning_rate=MyModelDesc["learning_rate"])
 train = optimizer.minimize(loss)
 
-# ** Initialize the global variables **
-
+# initialize globals
 init = tf.global_variables_initializer()
 
-# ** Create an instance of tf.train.Saver() **
+# create saver to save model later
 saver = tf.train.Saver()
 
 # ### Session
@@ -103,12 +92,13 @@ def get_next_batch(ModelDesc):
 
 
 
-############## BEGIN MAKING TRAINING ##########
+############## BEGIN TRAINING ##########
 
 
 with tf.Session() as sess:
     sess.run(init)
 
+    # list of MSEs for graphing later
     mse_list = np.zeros(int(MyModelDesc["num_iterations"] / 100) + 1)
     print(mse_list)
 
@@ -124,6 +114,7 @@ with tf.Session() as sess:
         # X_batch, y_batch = next_batch(training_set, batch_size, num_timesteps)
         sess.run(train, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
 
+        # every 100 iterations, print progress
         if iteration % 100 == 0:
 
             mse_list[iter_div] = loss.eval(feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
