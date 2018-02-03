@@ -1,12 +1,21 @@
 import numpy as np
 from collections import namedtuple
 
+import timeit
+
 
 vocab_size = 10
 target_index = 3
-vectorized_sent = [1 if x == target_index else 0 for x in range(vocab_size)]
-print(vectorized_sent)
+time = timeit.timeit('innef_vectorized_sent = [1 if x == 3 else 0 for x in range(8000)]', number=10)
+print(time)
+#print(innef_vectorized_sent)
 
+print("\n\n")
+
+#timeit.timeit('vectorized_sent = np.zeros(10)')
+#vectorized_sent = vectorized_sent.tolist()
+#vectorized_sent[target_index] = 1
+#print(vectorized_sent)
 
 """
 

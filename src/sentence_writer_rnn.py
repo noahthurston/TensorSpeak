@@ -66,7 +66,7 @@ class Model(object):
                 #print("New sentence")
 
                 if sent_index%100 == 0:
-                    print("Sentence: %d", sent_index)
+                    print("Sentence: ", sent_index)
 
                 for word in range(len(sentence)-1):
                     X_batch = [[sentence[word]]]
@@ -114,7 +114,10 @@ class Model(object):
 
 
             for generated_sent_index in range(num_sentences):
-                curr_word_vector = np.array([[[1 if x == self.word_to_index["!"] else 0 for x in range(self.vocab_size)]]])
+                #inefficient
+                #curr_word_vector = np.array([[[1 if x == self.word_to_index["!"] else 0 for x in range(self.vocab_size)]]])
+                curr_word_vector = np.zeros(self.vocab_size)
+                curr_word_vector[self.word_to_index[sentence_start_token]] = 1
 
                 max_sentence_length = 30
                 curr_sentence_length = 0
@@ -122,6 +125,8 @@ class Model(object):
                 print("Feeding: %s" % self.index_to_word[curr_word_vector.argmax()])
 
                 generated_sentence = []
+
+                curr_word_vector = curr_word_vector.reshape((1,1,self.vocab_size))
 
                 while (sentence_end_token != self.index_to_word[curr_word_vector.argmax()]) & (curr_sentence_length < max_sentence_length):
                     # feed in current word, predict next word
@@ -226,8 +231,13 @@ class Model(object):
         vectorized_sentences = []
         for sentence in tokenized_sentences:
             vectorized_sentence = []
-            for word_index in sentence:
-                vectorized_word = [1 if x == self.word_to_index[sentence_start_token] else 0 for x in range(self.vocab_size)]
+            for word_str in sentence:
+                #innefficient way
+                word_index = self.word_to_index[word_str]
+                #vectorized_word = [1 if x == self.word_to_index[sentence_start_token] else 0 for x in range(self.vocab_size)]
+                vectorized_word = np.zeros(self.vocab_size).tolist()
+                vectorized_word[word_index] = 1
+
                 vectorized_sentence.append(vectorized_word)
             vectorized_sentences.append(vectorized_sentence)
 
@@ -237,13 +247,13 @@ class Model(object):
 
 
 
-test_model = Model(num_io=8000, num_timesteps=1, num_neurons_inlayer=10,
+test_model = Model(num_io=11, num_timesteps=1, num_neurons_inlayer=10,
                    learning_rate=0.03, num_iterations=3, batch_size=1, save_dir="../data/")
 
 #def load_sentences(self, corpus_path, max_sent_len = -1):
 
 
-tokenized_sentences = test_model.load_sentences("test_sentences")
+
 """
 print("tokenize_sentences:")
 print(tokenized_sentences)
@@ -263,12 +273,14 @@ print('\n')
 #print(vectorized_sentences[0])
 #print(vectorized_sentences[1])
 #print(vectorized_sentences[2])
-
 #print(vectorized_sentences)
 
 
-# vectorized_sentences = test_model.sentences_to_vectors(tokenized_sentences)
+#tokenized_sentences = test_model.load_sentences("test_sentences")
+#vectorized_sentences = test_model.sentences_to_vectors(tokenized_sentences)
 #test_model.train_model(vectorized_sentences)
+
+
 test_model.load_dictionary("test_sentences")
 test_model.generate_sentences(3)
 
