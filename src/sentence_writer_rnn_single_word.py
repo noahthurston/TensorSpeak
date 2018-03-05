@@ -20,7 +20,6 @@ sentence_start_token = "sentence_start"
 sentence_end_token = "sentence_end"
 
 
-
 class Model(object):
     def __init__(self, num_io, num_timesteps, num_neurons_inlayer, learning_rate, num_iterations, batch_size, save_dir):
         self.num_io = num_io
@@ -63,18 +62,17 @@ class Model(object):
             sess.run(init)
 
             for sent_index, sentence in enumerate(vectorized_sentences):
-                #print("Sentence string: " + str(sentence))
                 # iter_div = int(iteration / 100)
                 #print("New sentence")
-                #sentence = [sentence_start_token for x in range(self.num_timesteps)] + sentence + [sentence_end_token for x in range(self.num_timesteps)]
+
                 if sent_index%100 == 0:
                     print("Sentence: ", sent_index)
 
-                for word in range(len(sentence)-self.num_timesteps):
-                    X_batch = [sentence[word:word+self.num_timesteps]]
-                    y_batch = [sentence[word+1:word+1+self.num_timesteps]]
-                    #print("X_batch:\n" + str(X_batch))
-                    #print("y_batch:\n" + str(y_batch))
+                for word in range(len(sentence)-1):
+                    X_batch = [[sentence[word]]]
+                    y_batch = [[sentence[word+1]]]
+                    print("X_batch:\n" + str(X_batch))
+                    print("y_batch:\n" + str(y_batch))
 
                     sess.run(train, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
 
@@ -113,62 +111,35 @@ class Model(object):
             saver.restore(sess, self.save_dir + "saved_model")
 
 
-
-            # vectorized version of a single sentence_start_token
-            sentence_start_token_vectorized = np.zeros((self.vocab_size))
-            sentence_start_token_vectorized[self.word_to_index[sentence_start_token]] = 1
-
-
             for generated_sent_index in range(num_sentences):
                 #inefficient
                 #curr_word_vector = np.array([[[1 if x == self.word_to_index["!"] else 0 for x in range(self.vocab_size)]]])
-                #curr_word_vector = np.zeros(self.vocab_size)
-                #curr_word_vector[self.word_to_index[sentence_start_token]] = 1
+                curr_word_vector = np.zeros(self.vocab_size)
+                curr_word_vector[self.word_to_index[sentence_start_token]] = 1
 
-                max_sentence_length = 20
+                max_sentence_length = 30
                 curr_sentence_length = 0
 
-                #print("Feeding: %s" % self.index_to_word[curr_word_vector.argmax()])
+                print("Feeding: %s" % self.index_to_word[curr_word_vector.argmax()])
 
+                generated_sentence = []
 
-                generated_sentence = np.array([[sentence_start_token_vectorized for x in range(self.num_timesteps)]])
-                print("generated_sentence.shape " + str(generated_sentence.shape))
+                curr_word_vector = curr_word_vector.reshape((1,1,self.vocab_size))
 
-                curr_words_vector = generated_sentence[:, -3:, :].reshape(1, self.num_timesteps, self.vocab_size)
-                print("curr_words_vector.shape " + str(curr_words_vector.shape))
-
-                pred_words_vector = generated_sentence[:, -3:, :]
-                print("pred_words_vector.shape " + str(pred_words_vector.shape))
-
-                while (sentence_end_token != self.index_to_word[generated_sentence[0,-1,:].argmax()]) & (curr_sentence_length < max_sentence_length):
+                while (sentence_end_token != self.index_to_word[curr_word_vector.argmax()]) & (curr_sentence_length < max_sentence_length):
                     # feed in current word, predict next word
-                    pred_words_vector = sess.run(tf.nn.softmax(logits=outputs), feed_dict={X_placeholder: curr_words_vector})
-                    print("pred_words_vector.shape " + str(pred_words_vector.shape))
+                    pred_word_vector = sess.run(tf.nn.softmax(logits=outputs), feed_dict={X_placeholder: curr_word_vector})
+                    curr_word_vector = pred_word_vector
 
-                    generated_sentence = np.append(generated_sentence, pred_words_vector[:, -1, :]).reshape((1, -1, self.vocab_size))
-                    print("generated_sentence.shape " + str(generated_sentence.shape))
-
-                    curr_words_vector = generated_sentence[:, -3:, :]
-                    print("curr_words_vector.shape " + str(curr_words_vector.shape))
-
-
-                    pred_word_str = self.index_to_word[generated_sentence[0, -1].argmax()]
-                    fed_word_str = self.index_to_word[generated_sentence[0, -2].argmax()]
-                    print("Word #" + str(curr_sentence_length))
-                    print("Fed: " + fed_word_str)
+                    pred_word_str = self.index_to_word[curr_word_vector.argmax()]
                     print("Predicted: " + pred_word_str)
+                    print("Feeding: %s" % self.index_to_word[pred_word_vector.argmax()])
 
-                    #generated_sentence.append(self.index_to_word[pred_words_vector.argmax()])
+                    generated_sentence.append(self.index_to_word[pred_word_vector.argmax()])
 
-                    curr_sentence_length = curr_sentence_length + 1
+                    curr_sentence_length + curr_sentence_length + 1
 
-
-                translated_sentence = ""
-                for word in generated_sentence[0,:,:]:
-                    translated_sentence = translated_sentence + " " + self.index_to_word[word.argmax()]
-
-
-                print('\t' + '\t' + '\t' + '\t' + '\t' + translated_sentence)
+                print('\t' + '\t' + '\t' + '\t' + '\t' + str(generated_sentence[:-1]))
 
 
 
@@ -185,13 +156,6 @@ class Model(object):
 
         print("Reading CSV file: %s" % corpus_file_name)
 
-        # create string of start and end tokens to buffer either side of each sentence
-        sentence_start_string = ""
-        sentence_end_string = ""
-        for x in range(self.num_timesteps):
-            sentence_start_string = sentence_start_string + sentence_start_token + " "
-            sentence_end_string = sentence_end_string + " " + sentence_end_token
-
         with open(self.save_dir + corpus_file_name + ".csv", 'rt') as f:
             reader = csv.reader(f, skipinitialspace=True)
             #reader.next()
@@ -201,9 +165,8 @@ class Model(object):
             csv_lines_filtered = filter(None, csv_lines)
 
             # tokenize sentences and attach start/end tokens
-
             sentences = itertools.chain(*[nltk.sent_tokenize(x[0].lower()) for x in csv_lines_filtered])
-            sentences = ["%s %s %s" % (sentence_start_string, sent, sentence_end_string) for sent in sentences]
+            sentences = ["%s %s %s" % (sentence_start_token, x, sentence_end_token) for x in sentences]
 
         # tokenize sentences into words using TweetTokenizer to preserve handles
         tk = nltk.TweetTokenizer(strip_handles=False, reduce_len=False, preserve_case=False)
@@ -228,13 +191,8 @@ class Model(object):
         self.create_dictionary(corpus_file_name, tokenized_sentences)
 
         # replace all words not in our vocabulary with the unknown token
-        # add start and end sentence tokens
         for i, sent in enumerate(tokenized_sentences):
             tokenized_sentences[i] = [w if w in self.word_to_index else unknown_token for w in sent]
-            #tokenized_sentences[i] = [sentence_start_token for x in range(self.num_timesteps)] + tokenized_sentences[i] + [sentence_end_token for x in range(self.num_timesteps)]
-
-            #sentence = [sentence_start_token for x in range(self.num_timesteps)] + sentence + [sentence_end_token for x in range(self.num_timesteps)]
-
 
         return tokenized_sentences
 
@@ -281,34 +239,48 @@ class Model(object):
                 vectorized_sentence.append(vectorized_word)
             vectorized_sentences.append(vectorized_sentence)
 
-        print("START\n\n\n")
-        print("vectorized_sentences[0]: " + str(vectorized_sentences[0]))
         return vectorized_sentences
 
 # def __init__(self, num_io, num_timesteps, num_neurons_inlayer, learning_rate, num_iterations, batch_size, save_dir):
 
 
 
-test_model = Model(num_io=12, num_timesteps=3, num_neurons_inlayer=10,
+test_model = Model(num_io=11, num_timesteps=1, num_neurons_inlayer=10,
                    learning_rate=0.03, num_iterations=3, batch_size=1, save_dir="../data/")
 
 #def load_sentences(self, corpus_path, max_sent_len = -1):
 
 
-# TRAINING
+
 """
-tokenized_sentences = test_model.load_sentences("test_sentences")
+print("tokenize_sentences:")
 print(tokenized_sentences)
-vectorized_sentences = test_model.sentences_to_vectors(tokenized_sentences)
-print(vectorized_sentences)
-test_model.train_model(vectorized_sentences)
+print('\n')
+
+print("index_to_word:")
+print(test_model.index_to_word)
+print('\n')
+
+print("word_to_index:")
+print(test_model.word_to_index)
+print('\n')
 """
 
+# turn each sentence into a list of vectors of length vocab_size
 
-# GENERATING
+#print(vectorized_sentences[0])
+#print(vectorized_sentences[1])
+#print(vectorized_sentences[2])
+#print(vectorized_sentences)
 
-test_model.load_dictionary("test_sentences")
-test_model.generate_sentences(1)
+
+tokenized_sentences = test_model.load_sentences("test_sentences")
+vectorized_sentences = test_model.sentences_to_vectors(tokenized_sentences)
+test_model.train_model(vectorized_sentences)
+
+
+#test_model.load_dictionary("test_sentences")
+#test_model.generate_sentences(3)
 
 
 
@@ -330,21 +302,6 @@ were going to feed in words like this
 ]]
 """
 
-
-
-###    TO DO    ###
-"""
--start runnable-code practice model
--check what tokenized sentences looks like (shape)
--write function to vectorize sentences so that each word is one-hot-vector
-    (MUST BE ABLE TO FEED INTO MODEL) 
-
--DECIDE:
-    -feed single words, predict next single word (MODEL #1)
-        or
-    -feed ~10 words in a row, predict next timestep forward (MODEL #2)
-
-"""
 
 
 
