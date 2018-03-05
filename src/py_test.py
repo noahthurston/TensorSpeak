@@ -1,10 +1,26 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import time
+
 from collections import namedtuple
 
 import timeit
 
+t = time.asctime(time.localtime(time.time()))
 
+st = '/here/' + "graph_" + t + "_.png"
 
+print(st)
+
+raise SystemExit
+
+hist_mse = np.array([10,9,7,3,2,3,2,1])
+x_values = np.array(range(len(hist_mse)))
+
+title_str = ("learning rate = %.2f" % 0.05)
+plt.plot(x_values, hist_mse)
+plt.title(title_str)
+plt.show()
 
 
 
