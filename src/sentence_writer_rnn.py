@@ -64,6 +64,8 @@ class Model(object):
         init = tf.global_variables_initializer()
         saver = tf.train.Saver()
 
+        print(self.word_to_index)
+
 
         ### TRAINING MODEL
         with tf.Session() as sess:
@@ -89,12 +91,17 @@ class Model(object):
                         X_batch = [sentence[word:word+self.num_timesteps]]
                         y_batch = [sentence[word+1:word+1+self.num_timesteps]]
                         #print("X_batch:\n" + str(X_batch))
-                        #print("y_batch:\n" + str(y_batch))
+                        #print("y_batch:\n" + str(y_batch) + '\n')
+
 
                         sess.run(train, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
 
-                        if sent_index % 10 == 0:
+                        if sent_index % 100 == 0:
+                            #print("X_batch:\n" + str(X_batch))
+                            #print("y_batch:\n" + str(y_batch) + '\n')
+
                             curr_mse = loss.eval(feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
+                            #print(curr_mse)
                             avg_mse = avg_mse + curr_mse
                             mse_count = mse_count + 1
 
@@ -102,7 +109,7 @@ class Model(object):
                     if sent_index % 100 == 0:
                         avg_mse = avg_mse/mse_count
                         print("Sentence: " + str(sent_index))
-                        print("Avg MSE: "+ str(avg_mse))
+                        print("Avg MSE: " + str(avg_mse))
                         self.historical_mse = np.append(self.historical_mse, avg_mse)
                         mse_count = 0
                         avg_mse = 0
@@ -161,43 +168,23 @@ class Model(object):
             sentence_start_token_vectorized = np.zeros((self.vocab_size))
             #sentence_start_token_vectorized[self.word_to_index[sentence_start_token]] = 1
 
-            sentence_start_token_vectorized[random.randint(0,100)] = 1
-
-            word_i = np.zeros((self.vocab_size))
-            word_i[random.randint(0,100)] = 1
-
-            word_am = np.zeros((self.vocab_size))
-            word_am[random.randint(0,100)] = 1
-
-            word_thinking = np.zeros((self.vocab_size))
-            word_thinking[random.randint(0,100)] = 1
+            sentence_start_token_vectorized[random.randint(0,self.vocab_size/10)] = 1
 
 
             for generated_sent_index in range(num_sentences):
-                #inefficient
-                #curr_word_vector = np.array([[[1 if x == self.word_to_index["!"] else 0 for x in range(self.vocab_size)]]])
-                #curr_word_vector = np.zeros(self.vocab_size)
-                #curr_word_vector[self.word_to_index[sentence_start_token]] = 1
-
                 max_sentence_length = 20
                 curr_sentence_length = 0
 
                 #print("Feeding: %s" % self.index_to_word[curr_word_vector.argmax()])
 
-
-
-
                 generated_sentence = np.zeros((1,1,self.vocab_size*2))
-                #generated_sentence[0,0,0] = 1
-                generated_sentence = generated_sentence.reshape((1, -1, self.vocab_size))
-                #generated_sentence = np.array([[sentence_start_token_vectorized for x in range(self.num_timesteps)]])
-                #print("generated_sentence.shape " + str(generated_sentence.shape))
+                generated_sentence[0, 0, self.word_to_index[sentence_start_token]] = 1
+                generated_sentence[0, 0, self.vocab_size + random.randint(0,self.vocab_size/10)] = 1
 
-                #generated_sentence = np.append(generated_sentence, word_i.reshape((1, 1, self.vocab_size))).reshape((1, -1, self.vocab_size))
-                generated_sentence = np.append(generated_sentence, word_i.reshape((1, 1, self.vocab_size))).reshape((1, -1, self.vocab_size))
-                generated_sentence = np.append(generated_sentence, word_am.reshape((1, 1, self.vocab_size))).reshape((1, -1, self.vocab_size))
-                #generated_sentence = np.append(generated_sentence, word_thinking.reshape((1, 1, self.vocab_size))).reshape((1, -1, self.vocab_size))
-                print(generated_sentence.shape)
+                #print(generated_sentence.shape)
+
+                generated_sentence = generated_sentence.reshape((1, -1, self.vocab_size))
+                #print(generated_sentence.shape)
 
                 curr_words_vector = generated_sentence[:, -self.num_timesteps:, :].reshape(1, self.num_timesteps, self.vocab_size)
                 #print("curr_words_vector.shape " + str(curr_words_vector.shape))
@@ -254,7 +241,9 @@ class Model(object):
         # create string of start and end tokens to buffer either side of each sentence
         sentence_start_string = ""
         sentence_end_string = ""
-        for x in range(self.num_timesteps):
+        #testing with only 1 start token, then buffering with zero arrays
+        #for x in range(self.num_timesteps):
+        for x in range(1):
             sentence_start_string = sentence_start_string + sentence_start_token + " "
             sentence_end_string = sentence_end_string + " " + sentence_end_token
 
@@ -269,7 +258,7 @@ class Model(object):
             # tokenize sentences and attach start/end tokens
 
             sentences = itertools.chain(*[nltk.sent_tokenize(x[0].lower()) for x in csv_lines_filtered])
-            sentences = ["%s %s %s" % (sentence_start_string, sent, sentence_end_string) for sent in sentences]
+            sentences = ["%s %s %s %s" % (sentence_start_string, sent, sentence_end_string, sentence_end_string) for sent in sentences]
 
         # tokenize sentences into words using TweetTokenizer to preserve handles
         tk = nltk.TweetTokenizer(strip_handles=False, reduce_len=False, preserve_case=False)
@@ -299,9 +288,11 @@ class Model(object):
             tokenized_sentences[i] = [w if w in self.word_to_index else unknown_token for w in sent]
             #tokenized_sentences[i] = [sentence_start_token for x in range(self.num_timesteps)] + tokenized_sentences[i] + [sentence_end_token for x in range(self.num_timesteps)]
 
-            #sentence = [sentence_start_token for x in range(self.num_timesteps)] + sentence + [sentence_end_token for x in range(self.num_timesteps)]
 
 
+            #tokenized_sentences[i] = [np.zeros(self.vocab_size) for x in range(self.num_timesteps-1)] + sent + [np.zeros(self.vocab_size) for x in range(self.num_timesteps-1)]
+
+        print(tokenized_sentences)
         return tokenized_sentences
 
 
@@ -336,6 +327,7 @@ class Model(object):
     def sentences_to_vectors(self, tokenized_sentences):
         vectorized_sentences = []
         for sentence in tokenized_sentences:
+            #vectorized_sentence = [np.zeros(self.vocab_size).tolist() for x in range(self.num_timesteps-1)]
             vectorized_sentence = []
             for word_str in sentence:
                 #innefficient way
@@ -345,9 +337,19 @@ class Model(object):
                 vectorized_word[word_index] = 1
 
                 vectorized_sentence.append(vectorized_word)
+
+            #for x in range(self.num_timesteps-1):
+            #    vectorized_sentence.append(np.zeros(self.vocab_size).tolist())
+
+            #print("vectorized_sentence: " + str(vectorized_sentence))
             vectorized_sentences.append(vectorized_sentence)
 
+
         #print("START\n\n\n")
+        #print(self.index_to_word[0])
+        #print(self.index_to_word[1])
+        #print(self.word_to_index[sentence_end_token])
+
         #print("vectorized_sentences[0]: " + str(vectorized_sentences[0]))
         return vectorized_sentences
 
@@ -355,28 +357,31 @@ class Model(object):
 
 
 
-test_model = Model(num_io=2000, num_timesteps=5, num_neurons_inlayer=200,
-                   learning_rate=0.0025, num_iterations=50, batch_size=1, save_dir="../data/trump_model/")
+test_model = Model(num_io=3600, num_timesteps=1, num_neurons_inlayer=50,
+                   learning_rate=0.001, num_iterations=50, batch_size=1, save_dir="../data/trump_model/")
 
 #def load_sentences(self, corpus_path, max_sent_len = -1):
 
 
 # TRAINING
+def train():
+    tokenized_sentences = test_model.load_sentences("trump_1k_tweets")
+    #print(tokenized_sentences)
+    vectorized_sentences = test_model.sentences_to_vectors(tokenized_sentences)
+    #print(vectorized_sentences)
+    test_model.train_model(vectorized_sentences)
 
-tokenized_sentences = test_model.load_sentences("trump_1k_tweets")
-#print(tokenized_sentences)
-vectorized_sentences = test_model.sentences_to_vectors(tokenized_sentences)
-#print(vectorized_sentences)
-test_model.train_model(vectorized_sentences)
 
 
 
 # GENERATING
-"""
-test_model.load_dictionary("trump_1k_tweets")
-test_model.generate_sentences(1)
-"""
+def generate():
+    test_model.load_dictionary("trump_1k_tweets")
+    test_model.generate_sentences(5)
 
+
+#train()
+generate()
 
 
 """
@@ -420,170 +425,3 @@ were going to feed in words like this
 
 
 raise SystemExit
-
-
-#### old code
-"""
-# ##################################################################################################
-# ##################################################################################################
-
-
-MyModelDesc = {"num_io":4,
-           "num_timesteps":6,
-           "num_neurons_inlayer":100,
-           "learning_rate":0.030,
-           "num_iterations":1000,
-           "batch_size":1}
-
-X_placeholder = tf.placeholder(tf.float32, [None, MyModelDesc["num_timesteps"], MyModelDesc["num_io"]])
-y_placeholder = tf.placeholder(tf.float32, [None, MyModelDesc["num_timesteps"], MyModelDesc["num_io"]])
-
-cell = tf.contrib.rnn.OutputProjectionWrapper(
-    tf.contrib.rnn.BasicLSTMCell(num_units=MyModelDesc["num_neurons_inlayer"], activation=tf.nn.relu),output_size=MyModelDesc["num_io"])
-
-outputs, states = tf.nn.dynamic_rnn(cell, X_placeholder, dtype=tf.float32)
-
-loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=outputs,labels=y_placeholder))
-optimizer = tf.train.AdamOptimizer(learning_rate=MyModelDesc["learning_rate"])
-train = optimizer.minimize(loss)
-
-init = tf.global_variables_initializer()
-saver = tf.train.Saver()
-
-#    X_set = full_set[:,:-1].reshape(-1, steps, 1)
-#    y_set = full_set[:,1:].reshape(-1, steps, 1)
-
-
-def get_next_batch(ModelDesc):
-    test_arr = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0]
-    test_arr_x5 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
-                   1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
-                   1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
-                   1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
-                   1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0]
-
-    num_test_vectors = len(test_arr_x5) / ModelDesc["num_io"]
-
-    # print("len(test_arr_x5): %d" % len(test_arr_x5))
-    # print("num_test_vectors: %d" % num_test_vectors)
-
-    test_arr_x5 = np.array(test_arr_x5).reshape(1, -1, ModelDesc["num_io"])
-
-    # print("len(test_arr_x5): %d" % len(test_arr_x5))
-    # print("num_test_vectors: %d" % num_test_vectors)
-
-    # print(test_arr_x5)
-
-    # we feed it 4 inputs, so we can ask for anything a starting point anywhere between 0 -> -5
-    # last possible X_batch: -5 -> -2
-    # last possible y_batch: -4 -> -1
-
-    smallest_rand_start = 0
-    largest_rand_start = int(num_test_vectors - ModelDesc["num_timesteps"] - 1)
-
-    random_start = np.random.randint(smallest_rand_start, largest_rand_start)
-    # print("random_start: %d" % random_start)
-
-    X_batch = test_arr_x5[:, random_start:random_start + ModelDesc["num_timesteps"], :]
-    y_batch = test_arr_x5[:, random_start + 1:random_start + ModelDesc["num_timesteps"] + 1, :]
-
-    return X_batch, y_batch
-
-
-
-
-
-
-############## BEGIN MAKING TRAINING ##########
-
-
-with tf.Session() as sess:
-    sess.run(init)
-
-    mse_list = np.zeros(int(MyModelDesc["num_iterations"] / 100) + 1)
-    print(mse_list)
-
-    for iteration in range(MyModelDesc["num_iterations"]):
-        iter_div = int(iteration / 100)
-
-        X_batch, y_batch = get_next_batch(MyModelDesc)
-        print("X_batch:")
-        print(X_batch)
-        print("y_batch:")
-        print(y_batch)
-
-        # X_batch, y_batch = next_batch(training_set, batch_size, num_timesteps)
-        sess.run(train, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
-
-        if iteration % 100 == 0:
-
-            mse_list[iter_div] = loss.eval(feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
-
-            if mse_list[iter_div - 1] < mse_list[iter_div]:
-                print("%f < %f" % (mse_list[iter_div - 1], mse_list[iter_div]))
-                learning_rate = MyModelDesc["learning_rate"] / 2
-                print("Halving learning rate: %f to %f" % (MyModelDesc["learning_rate"] * 2, MyModelDesc["learning_rate"]))
-
-            print(iteration, "\tMSE:", mse_list[iter_div])
-            # print(mse_list)
-
-    # Save Model for Later
-    saver.save(sess, "../data/wave_predictor_rnn")
-
-x_plt = np.arange(0, int(MyModelDesc["num_iterations"] / 100) + 1, 1).reshape(-1, 1)
-y_plt = mse_list.reshape(-1, 1)
-print(x_plt)
-print(y_plt)
-
-plt.show()
-plt.plot(x_plt, y_plt, "r-")
-plt.show()
-
-
-
-
-
-
-############## BEGIN MAKING PREDICTIONS ##########
-
-
-with tf.Session() as sess:
-    # Use your Saver instance to restore your saved rnn time series model
-    saver.restore(sess, "../data/wave_predictor_rnn")
-
-    X_seed, y_true = get_next_batch(MyModelDesc)
-    y_pred = sess.run(tf.nn.softmax(logits=outputs), feed_dict={X_placeholder: X_seed})
-    print("\n")
-    print(X_seed)
-
-    print(y_true)
-    print(y_pred)
-
-    y_true_translated = []
-    y_pred_translated = []
-
-    for row in y_true[0]:
-        y_true_translated.append(row[:].argmax())
-
-    for row in y_pred[0]:
-        y_pred_translated.append(row[:].argmax())
-
-    print(y_true_translated)
-    print(y_pred_translated)
-
-
-    plt.plot(range(0,6), y_true_translated,"g-")
-    plt.plot(range(0, 6), y_pred_translated, "ro")
-    plt.show()
-
-    print(np.array(X_seed[0, 0, :]).argmax())
-    print(np.array(X_seed[0, 1, :]).argmax())
-    print(np.array(X_seed[0, 2, :]).argmax())
-    print(np.array(X_seed[0, 3, :]).argmax())
-    print(np.array(X_seed[0, 4, :]).argmax())
-    print(np.array(X_seed[0, 5, :]).argmax())
-
-sys.exit()
-
-
-"""
