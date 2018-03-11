@@ -1,16 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+import random
 
 from collections import namedtuple
 
 import timeit
 
-t = time.asctime(time.localtime(time.time()))
 
-st = '/here/' + "graph_" + t + "_.png"
+arr = np.array([0,1,2,3])
+sharr = np.random.shuffle(arr)
 
-print(st)
+print(arr)
+print(sharr)
 
 raise SystemExit
 

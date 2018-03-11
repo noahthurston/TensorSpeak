@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import sys
 import tensorflow as tf
 
+import random
 import csv
 import itertools
 import nltk
@@ -35,6 +36,8 @@ class Model(object):
         self.vocab_size = num_io
 
         self.historical_mse = np.array([0])
+
+        self.corpuse_file_name = ""
 
         # variables initialized later
         # self.vectorized_sentences = []
@@ -71,6 +74,9 @@ class Model(object):
                 mse_count = 0
                 avg_mse = 0
 
+                np.random.shuffle(vectorized_sentences)
+
+
                 for sent_index, sentence in enumerate(vectorized_sentences):
                     #print("Sentence string: " + str(sentence))
                     # iter_div = int(iteration / 100)
@@ -93,7 +99,7 @@ class Model(object):
                             mse_count = mse_count + 1
 
 
-                    if sent_index % 10 == 0:
+                    if sent_index % 100 == 0:
                         avg_mse = avg_mse/mse_count
                         print("Sentence: " + str(sent_index))
                         print("Avg MSE: "+ str(avg_mse))
@@ -108,12 +114,12 @@ class Model(object):
     def graph_mse(self):
         x_values = np.array(range(len(self.historical_mse)))
 
-        title_str = ("LR=%.4f, iterations=%d," % (self.learning_rate, self.num_iterations))
+        title_str = ("%s, TS=%d, NeurPL=%d, LR=%.4f, Iters=%d" % (self.corpuse_file_name, self.num_timesteps, self.num_neurons_inlayer, self.learning_rate, self.num_iterations))
         plt.plot(x_values, self.historical_mse)
         plt.title(title_str)
 
         t = time.asctime(time.localtime(time.time()))
-        save_str = self.save_dir + "graph_" + t + "_.png"
+        save_str = self.save_dir + "graph_" + self.corpuse_file_name + "_" + t + "_.png"
 
         plt.savefig(save_str, format='png', dpi=300)
 
@@ -140,6 +146,9 @@ class Model(object):
         saver = tf.train.Saver()
 
 
+        print(self.word_to_index)
+
+
         ### GENERATING SENTENCES WITH MODEL
         with tf.Session() as sess:
             sess.run(init)
@@ -150,7 +159,18 @@ class Model(object):
 
             # vectorized version of a single sentence_start_token
             sentence_start_token_vectorized = np.zeros((self.vocab_size))
-            sentence_start_token_vectorized[self.word_to_index[sentence_start_token]] = 1
+            #sentence_start_token_vectorized[self.word_to_index[sentence_start_token]] = 1
+
+            sentence_start_token_vectorized[random.randint(0,100)] = 1
+
+            word_i = np.zeros((self.vocab_size))
+            word_i[random.randint(0,100)] = 1
+
+            word_am = np.zeros((self.vocab_size))
+            word_am[random.randint(0,100)] = 1
+
+            word_thinking = np.zeros((self.vocab_size))
+            word_thinking[random.randint(0,100)] = 1
 
 
             for generated_sent_index in range(num_sentences):
@@ -165,8 +185,19 @@ class Model(object):
                 #print("Feeding: %s" % self.index_to_word[curr_word_vector.argmax()])
 
 
-                generated_sentence = np.array([[sentence_start_token_vectorized for x in range(self.num_timesteps)]])
+
+
+                generated_sentence = np.zeros((1,1,self.vocab_size*2))
+                #generated_sentence[0,0,0] = 1
+                generated_sentence = generated_sentence.reshape((1, -1, self.vocab_size))
+                #generated_sentence = np.array([[sentence_start_token_vectorized for x in range(self.num_timesteps)]])
                 #print("generated_sentence.shape " + str(generated_sentence.shape))
+
+                #generated_sentence = np.append(generated_sentence, word_i.reshape((1, 1, self.vocab_size))).reshape((1, -1, self.vocab_size))
+                generated_sentence = np.append(generated_sentence, word_i.reshape((1, 1, self.vocab_size))).reshape((1, -1, self.vocab_size))
+                generated_sentence = np.append(generated_sentence, word_am.reshape((1, 1, self.vocab_size))).reshape((1, -1, self.vocab_size))
+                #generated_sentence = np.append(generated_sentence, word_thinking.reshape((1, 1, self.vocab_size))).reshape((1, -1, self.vocab_size))
+                print(generated_sentence.shape)
 
                 curr_words_vector = generated_sentence[:, -self.num_timesteps:, :].reshape(1, self.num_timesteps, self.vocab_size)
                 #print("curr_words_vector.shape " + str(curr_words_vector.shape))
@@ -215,6 +246,7 @@ class Model(object):
 
     def load_sentences(self, corpus_file_name, max_sent_len = -1):
 
+        self.corpuse_file_name = corpus_file_name
         ### tokenize sentences, call create_dictionary
 
         print("Reading CSV file: %s" % corpus_file_name)
@@ -323,27 +355,27 @@ class Model(object):
 
 
 
-test_model = Model(num_io=700, num_timesteps=5, num_neurons_inlayer=100,
-                   learning_rate=0.0025, num_iterations=10, batch_size=1, save_dir="../data/trump_model/")
+test_model = Model(num_io=2000, num_timesteps=5, num_neurons_inlayer=200,
+                   learning_rate=0.0025, num_iterations=50, batch_size=1, save_dir="../data/trump_model/")
 
 #def load_sentences(self, corpus_path, max_sent_len = -1):
 
 
 # TRAINING
-"""
-tokenized_sentences = test_model.load_sentences("trump_100_tweets")
+
+tokenized_sentences = test_model.load_sentences("trump_1k_tweets")
 #print(tokenized_sentences)
 vectorized_sentences = test_model.sentences_to_vectors(tokenized_sentences)
 #print(vectorized_sentences)
 test_model.train_model(vectorized_sentences)
-"""
+
 
 
 # GENERATING
-
-test_model.load_dictionary("trump_100_tweets")
-test_model.generate_sentences(5)
-
+"""
+test_model.load_dictionary("trump_1k_tweets")
+test_model.generate_sentences(1)
+"""
 
 
 
