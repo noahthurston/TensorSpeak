@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import tensorflow as tf
+import tensorboard as tb
 
 import random
 import csv
@@ -13,6 +14,7 @@ import nltk
 import pickle
 
 import time
+import datetime
 
 # import pandas as pd
 # from sklearn.preprocessing import MinMaxScaler
@@ -25,9 +27,10 @@ sentence_end_token = "sentence_end"
 
 
 class Model(object):
-    def __init__(self, num_io, num_timesteps, num_neurons_inlayer, learning_rate, num_iterations, batch_size, save_dir):
+    def __init__(self, num_io, num_timesteps, num_layers, num_neurons_inlayer, learning_rate, num_iterations, batch_size, save_dir):
         self.num_io = num_io
         self.num_timesteps = num_timesteps
+        self.num_layers = num_layers
         self.num_neurons_inlayer = num_neurons_inlayer
         self.learning_rate = learning_rate
         self.num_iterations = num_iterations
@@ -51,11 +54,43 @@ class Model(object):
         X_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
         y_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
 
-        cell = tf.contrib.rnn.OutputProjectionWrapper(
+        #OLD CODE
+        """
+        single_cell = tf.contrib.rnn.OutputProjectionWrapper(
             tf.contrib.rnn.BasicLSTMCell(num_units=self.num_neurons_inlayer, activation=tf.nn.relu),
             output_size=self.num_io)
+        """
 
-        outputs, states = tf.nn.dynamic_rnn(cell, X_placeholder, dtype=tf.float32)
+        # EXAMPLE FROM TF DOCS
+        """
+        def lstm_cell():
+          return tf.contrib.rnn.BasicLSTMCell(lstm_size)
+        stacked_lstm = tf.contrib.rnn.MultiRNNCell(
+            [lstm_cell() for _ in range(number_of_layers)])
+
+        initial_state = state = stacked_lstm.zero_state(batch_size, tf.float32)
+        for i in range(num_steps):
+            # The value of state is updated after processing each batch of words.
+            output, state = stacked_lstm(words[:, i], state)
+
+            # The rest of the code.
+            # ...
+
+        final_state = state
+
+        """
+
+        def single_cell():
+            return tf.contrib.rnn.BasicLSTMCell(num_units=self.num_neurons_inlayer, activation=tf.nn.relu)
+
+        stacked_lstm = tf.contrib.rnn.MultiRNNCell(
+            [single_cell() for _ in range(self.num_layers)])
+
+        lstm_with_wrapper = tf.contrib.rnn.OutputProjectionWrapper(
+            stacked_lstm,
+            output_size=self.num_io)
+
+        outputs, states = tf.nn.dynamic_rnn(lstm_with_wrapper, X_placeholder, dtype=tf.float32)
 
         loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=outputs, labels=y_placeholder))
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
@@ -70,6 +105,16 @@ class Model(object):
         ### TRAINING MODEL
         with tf.Session() as sess:
             sess.run(init)
+
+
+            tensorboard_counter = 0
+
+            #TensorBoard code
+            summaryMerged = tf.summary.merge_all()
+            filename = "./summary_log/run" + datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%s")
+            writer = tf.summary.FileWriter(filename, sess.graph)
+
+
 
             for iteration in range(self.num_iterations):
                 print("BEGINNING ITERATION #" + str(iteration))
@@ -94,13 +139,20 @@ class Model(object):
                         #print("y_batch:\n" + str(y_batch) + '\n')
 
 
+
                         sess.run(train, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
+                        #error, _, sumOut = sess.run(train, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
+
 
                         if sent_index % 100 == 0:
                             #print("X_batch:\n" + str(X_batch))
                             #print("y_batch:\n" + str(y_batch) + '\n')
 
                             curr_mse = loss.eval(feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
+
+                            #writer.add_summary(curr_mse, tensorboard_counter)
+                            #tensorboard_counter = tensorboard_counter + 1
+
                             #print(curr_mse)
                             avg_mse = avg_mse + curr_mse
                             mse_count = mse_count + 1
@@ -139,6 +191,10 @@ class Model(object):
         X_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
         y_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
 
+
+
+        #SINGLE LAYER CODE
+        """
         cell = tf.contrib.rnn.OutputProjectionWrapper(
             tf.contrib.rnn.BasicLSTMCell(num_units=self.num_neurons_inlayer, activation=tf.nn.relu),
             output_size=self.num_io)
@@ -152,6 +208,27 @@ class Model(object):
         init = tf.global_variables_initializer()
         saver = tf.train.Saver()
 
+        print(self.word_to_index)
+        """
+
+        def single_cell():
+            return tf.contrib.rnn.BasicLSTMCell(num_units=self.num_neurons_inlayer, activation=tf.nn.relu)
+
+        stacked_lstm = tf.contrib.rnn.MultiRNNCell(
+            [single_cell() for _ in range(self.num_layers)])
+
+        lstm_with_wrapper = tf.contrib.rnn.OutputProjectionWrapper(
+            stacked_lstm,
+            output_size=self.num_io)
+
+        outputs, states = tf.nn.dynamic_rnn(lstm_with_wrapper, X_placeholder, dtype=tf.float32)
+
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=outputs, labels=y_placeholder))
+        optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
+        train = optimizer.minimize(loss)
+
+        init = tf.global_variables_initializer()
+        saver = tf.train.Saver()
 
         print(self.word_to_index)
 
@@ -168,7 +245,7 @@ class Model(object):
             sentence_start_token_vectorized = np.zeros((self.vocab_size))
             #sentence_start_token_vectorized[self.word_to_index[sentence_start_token]] = 1
 
-            sentence_start_token_vectorized[random.randint(0,self.vocab_size/10)] = 1
+            sentence_start_token_vectorized[random.randint(0, self.vocab_size-1)] = 1
 
 
             for generated_sent_index in range(num_sentences):
@@ -179,7 +256,7 @@ class Model(object):
 
                 generated_sentence = np.zeros((1,1,self.vocab_size*2))
                 generated_sentence[0, 0, self.word_to_index[sentence_start_token]] = 1
-                generated_sentence[0, 0, self.vocab_size + random.randint(0,self.vocab_size/10)] = 1
+                generated_sentence[0, 0, self.vocab_size + random.randint(0,self.vocab_size-1)] = 1
 
                 #print(generated_sentence.shape)
 
@@ -357,15 +434,15 @@ class Model(object):
 
 
 
-test_model = Model(num_io=3600, num_timesteps=1, num_neurons_inlayer=50,
-                   learning_rate=0.001, num_iterations=50, batch_size=1, save_dir="../data/trump_model/")
+test_model = Model(num_io=740, num_timesteps=1, num_layers=3 ,num_neurons_inlayer=50,
+                   learning_rate=0.005, num_iterations=10, batch_size=1, save_dir="../data/trump_model/")
 
 #def load_sentences(self, corpus_path, max_sent_len = -1):
 
 
 # TRAINING
 def train():
-    tokenized_sentences = test_model.load_sentences("trump_1k_tweets")
+    tokenized_sentences = test_model.load_sentences("trump_100_tweets")
     #print(tokenized_sentences)
     vectorized_sentences = test_model.sentences_to_vectors(tokenized_sentences)
     #print(vectorized_sentences)
@@ -376,7 +453,7 @@ def train():
 
 # GENERATING
 def generate():
-    test_model.load_dictionary("trump_1k_tweets")
+    test_model.load_dictionary("trump_100_tweets")
     test_model.generate_sentences(5)
 
 
