@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import tensorflow as tf
-import tensorboard as tb
 
 import random
 import csv
@@ -96,6 +95,10 @@ class Model(object):
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         train = optimizer.minimize(loss)
 
+
+        loss_summary = tf.summary.scalar('Loss', loss)
+
+
         init = tf.global_variables_initializer()
         saver = tf.train.Saver()
 
@@ -106,43 +109,33 @@ class Model(object):
         with tf.Session() as sess:
             sess.run(init)
 
-
-            tensorboard_counter = 0
-
             #TensorBoard code
             summaryMerged = tf.summary.merge_all()
             filename = "./summary_log/run" + datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%s")
             writer = tf.summary.FileWriter(filename, sess.graph)
-
+            tensorboard_counter = 0
 
 
             for iteration in range(self.num_iterations):
                 print("BEGINNING ITERATION #" + str(iteration))
                 mse_count = 0
                 avg_mse = 0
-
                 np.random.shuffle(vectorized_sentences)
 
-
                 for sent_index, sentence in enumerate(vectorized_sentences):
-                    #print("Sentence string: " + str(sentence))
-                    # iter_div = int(iteration / 100)
-                    #print("New sentence")
-                    #sentence = [sentence_start_token for x in range(self.num_timesteps)] + sentence + [sentence_end_token for x in range(self.num_timesteps)]
-
-
-
                     for word in range(len(sentence)-self.num_timesteps):
                         X_batch = [sentence[word:word+self.num_timesteps]]
                         y_batch = [sentence[word+1:word+1+self.num_timesteps]]
                         #print("X_batch:\n" + str(X_batch))
                         #print("y_batch:\n" + str(y_batch) + '\n')
 
-
+                        # Calculate loss for TensorBoard summary
+                        loss_result = sess.run(loss_summary, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
+                        writer.add_summary(loss_result, tensorboard_counter)
+                        tensorboard_counter = tensorboard_counter + 1
 
                         sess.run(train, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
                         #error, _, sumOut = sess.run(train, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
-
 
                         if sent_index % 100 == 0:
                             #print("X_batch:\n" + str(X_batch))
@@ -156,8 +149,6 @@ class Model(object):
                             #print(curr_mse)
                             avg_mse = avg_mse + curr_mse
                             mse_count = mse_count + 1
-
-
                     if sent_index % 100 == 0:
                         avg_mse = avg_mse/mse_count
                         print("Sentence: " + str(sent_index))
@@ -167,8 +158,10 @@ class Model(object):
                         avg_mse = 0
 
             saver.save(sess, self.save_dir + "saved_model")
-
+            writer.close()
         self.graph_mse()
+
+
 
     def graph_mse(self):
         x_values = np.array(range(len(self.historical_mse)))
@@ -434,8 +427,8 @@ class Model(object):
 
 
 
-test_model = Model(num_io=740, num_timesteps=1, num_layers=3 ,num_neurons_inlayer=50,
-                   learning_rate=0.005, num_iterations=10, batch_size=1, save_dir="../data/trump_model/")
+test_model = Model(num_io=700, num_timesteps=1, num_layers=3 ,num_neurons_inlayer=50,
+                   learning_rate=0.005, num_iterations=5, batch_size=1, save_dir="../data/trump_model/")
 
 #def load_sentences(self, corpus_path, max_sent_len = -1):
 
@@ -457,8 +450,8 @@ def generate():
     test_model.generate_sentences(5)
 
 
-#train()
-generate()
+train()
+#generate()
 
 
 """
