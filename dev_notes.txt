@@ -1,0 +1,11 @@
+dev_notes
+
+tensorboard launch command with conda:
+python /anaconda3/envs/conda_TensorSpeak/lib/python3.6/site-packages/tensorflow/tensorboard/tensorboard.py --logdir=./logs/
+
+
+
+Naming scheme:
+source_file_month-day--hour-minute
+
+source activate conda_TensorSpeak
