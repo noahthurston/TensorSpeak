@@ -15,18 +15,15 @@ import pickle
 import time
 import datetime
 
-# import pandas as pd
-# from sklearn.preprocessing import MinMaxScaler
-
+#to start tensorboard using conda:
+#python /anaconda3/envs/conda_TensorSpeak/lib/python3.6/site-packages/tensorflow/tensorboard/tensorboard.py --logdir=./summary_log/
 
 unknown_token = "unknown_token"
 sentence_start_token = "sentence_start"
 sentence_end_token = "sentence_end"
 
-
-
 class Model(object):
-    def __init__(self, num_io, num_timesteps, num_layers, num_neurons_inlayer, learning_rate, num_iterations, batch_size, save_dir):
+    def __init__(self, num_io, num_timesteps, num_layers, num_neurons_inlayer, learning_rate, num_iterations, batch_size):
         self.num_io = num_io
         self.num_timesteps = num_timesteps
         self.num_layers = num_layers
@@ -34,50 +31,34 @@ class Model(object):
         self.learning_rate = learning_rate
         self.num_iterations = num_iterations
         self.batch_size = batch_size
-        self.save_dir = save_dir
         self.vocab_size = num_io
-
-        self.historical_mse = np.array([0])
-
-        self.corpuse_file_name = ""
+        self.corpus_file_name = ""
+        self.current_save_name = ""
 
         # variables initialized later
-        # self.vectorized_sentences = []
         self.word_to_index = []
         self.index_to_word = []
 
-    def train_model(self, vectorized_sentences):
-        print("training started at: " + time.asctime(time.localtime(time.time())))
 
-        ### BUILDING MODEL
+    def print_model_info(self):
+        print("Model info:")
+        print("num_io: %d" % self.num_io)
+        print("num_timesteps: %d" % self.num_timesteps)
+        print("num_layers: %d" % self.num_layers)
+        print("num_neurons_inlayer: %d" % self.num_neurons_inlayer)
+        print("learning_rate: %.5f" % self.learning_rate)
+        print("num_iterations: %d" % self.num_iterations)
+        print("batch_size: %d" % self.batch_size)
+        print("vocab_size: %d" % self.vocab_size)
+        print("num_io: %s" % self.corpus_file_name)
+
+
+    def build_graph(self):
+        print("Building model")
+        #run tensorflow functions to build model
+
         X_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
         y_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
-
-        #OLD CODE
-        """
-        single_cell = tf.contrib.rnn.OutputProjectionWrapper(
-            tf.contrib.rnn.BasicLSTMCell(num_units=self.num_neurons_inlayer, activation=tf.nn.relu),
-            output_size=self.num_io)
-        """
-
-        # EXAMPLE FROM TF DOCS
-        """
-        def lstm_cell():
-          return tf.contrib.rnn.BasicLSTMCell(lstm_size)
-        stacked_lstm = tf.contrib.rnn.MultiRNNCell(
-            [lstm_cell() for _ in range(number_of_layers)])
-
-        initial_state = state = stacked_lstm.zero_state(batch_size, tf.float32)
-        for i in range(num_steps):
-            # The value of state is updated after processing each batch of words.
-            output, state = stacked_lstm(words[:, i], state)
-
-            # The rest of the code.
-            # ...
-
-        final_state = state
-
-        """
 
         def single_cell():
             return tf.contrib.rnn.BasicLSTMCell(num_units=self.num_neurons_inlayer, activation=tf.nn.relu)
@@ -95,15 +76,17 @@ class Model(object):
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         train = optimizer.minimize(loss)
 
-
-        loss_summary = tf.summary.scalar('Loss', loss)
-
-
         init = tf.global_variables_initializer()
+
+        return init, train, loss, X_placeholder, y_placeholder, outputs
+
+    def train_model(self, vectorized_sentences):
+        print("Training started at: " + datetime.datetime.now().strftime("%H:%M:%S"))
+
+        init, train, loss, X_placeholder, y_placeholder, outputs = self.build_graph()
+
         saver = tf.train.Saver()
-
-        print(self.word_to_index)
-
+        loss_summary = tf.summary.scalar('Loss', loss)
 
         ### TRAINING MODEL
         with tf.Session() as sess:
@@ -111,13 +94,14 @@ class Model(object):
 
             #TensorBoard code
             summaryMerged = tf.summary.merge_all()
-            filename = "./summary_log/run" + datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%s")
+            self.update_save_name()
+            filename = "../logs/" + self.current_save_name
             writer = tf.summary.FileWriter(filename, sess.graph)
             tensorboard_counter = 0
 
 
             for iteration in range(self.num_iterations):
-                print("BEGINNING ITERATION #" + str(iteration))
+                print("BEGINNING ITERATION #" + str(iteration) + "\tTime: " + datetime.datetime.now().strftime("%H:%M:%S"))
                 mse_count = 0
                 avg_mse = 0
                 np.random.shuffle(vectorized_sentences)
@@ -135,8 +119,9 @@ class Model(object):
                         tensorboard_counter = tensorboard_counter + 1
 
                         sess.run(train, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
-                        #error, _, sumOut = sess.run(train, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
 
+                        # for graphing MSE without TB
+                        """
                         if sent_index % 100 == 0:
                             #print("X_batch:\n" + str(X_batch))
                             #print("y_batch:\n" + str(y_batch) + '\n')
@@ -149,60 +134,35 @@ class Model(object):
                             #print(curr_mse)
                             avg_mse = avg_mse + curr_mse
                             mse_count = mse_count + 1
+                        """
+
+                    #for graphing MSE without TB
+                    """
                     if sent_index % 100 == 0:
                         avg_mse = avg_mse/mse_count
                         print("Sentence: " + str(sent_index))
                         print("Avg MSE: " + str(avg_mse))
-                        self.historical_mse = np.append(self.historical_mse, avg_mse)
+                        #self.historical_mse = np.append(self.historical_mse, avg_mse)
                         mse_count = 0
                         avg_mse = 0
+                        
+                    """""
 
-            saver.save(sess, self.save_dir + "saved_model")
+            variables_save_file = "../models/" + self.corpus_file_name + "_" + datetime.datetime.now().strftime("%m-%d--%H-%M")
+            saver.save(sess,  variables_save_file)
             writer.close()
-        self.graph_mse()
+        #self.graph_mse()
 
 
-
-    def graph_mse(self):
-        x_values = np.array(range(len(self.historical_mse)))
-
-        title_str = ("%s, TS=%d, NeurPL=%d, LR=%.4f, Iters=%d" % (self.corpuse_file_name, self.num_timesteps, self.num_neurons_inlayer, self.learning_rate, self.num_iterations))
-        plt.plot(x_values, self.historical_mse)
-        plt.title(title_str)
-
-        t = time.asctime(time.localtime(time.time()))
-        save_str = self.save_dir + "graph_" + self.corpuse_file_name + "_" + t + "_.png"
-
-        plt.savefig(save_str, format='png', dpi=300)
-
-
-
-    def generate_sentences(self, num_sentences):
+    def generate_sentences(self, graph_name, num_sentences):
         print("generating sentences")
 
+
+
+        """
         ### BUILDING MODEL
         X_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
         y_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
-
-
-
-        #SINGLE LAYER CODE
-        """
-        cell = tf.contrib.rnn.OutputProjectionWrapper(
-            tf.contrib.rnn.BasicLSTMCell(num_units=self.num_neurons_inlayer, activation=tf.nn.relu),
-            output_size=self.num_io)
-
-        outputs, states = tf.nn.dynamic_rnn(cell, X_placeholder, dtype=tf.float32)
-
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=outputs, labels=y_placeholder))
-        optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
-        train = optimizer.minimize(loss)
-
-        init = tf.global_variables_initializer()
-        saver = tf.train.Saver()
-
-        print(self.word_to_index)
-        """
 
         def single_cell():
             return tf.contrib.rnn.BasicLSTMCell(num_units=self.num_neurons_inlayer, activation=tf.nn.relu)
@@ -219,8 +179,12 @@ class Model(object):
         loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=outputs, labels=y_placeholder))
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         train = optimizer.minimize(loss)
-
+        
         init = tf.global_variables_initializer()
+        """
+
+        init, train, loss, X_placeholder, y_placeholder, outputs = self.build_graph()
+
         saver = tf.train.Saver()
 
         print(self.word_to_index)
@@ -230,8 +194,7 @@ class Model(object):
         with tf.Session() as sess:
             sess.run(init)
 
-            saver.restore(sess, self.save_dir + "saved_model")
-
+            saver.restore(sess, "../models/" + graph_name)
 
 
             # vectorized version of a single sentence_start_token
@@ -293,17 +256,10 @@ class Model(object):
                 print('\t' + '\t' + '\t' + '\t' + '\t' + translated_sentence)
 
 
-
-        #### target index = myList.index(max(myList))
-
-
-
-    #def get_next_batch(self, vectorized_sentences, iteration):
-
-
     def load_sentences(self, corpus_file_name, max_sent_len = -1):
 
-        self.corpuse_file_name = corpus_file_name
+        self.corpus_file_name = corpus_file_name
+        self.current_save_name = self.corpus_file_name + "_" + datetime.datetime.now().strftime("%m-%d--%H-%M")
         ### tokenize sentences, call create_dictionary
 
         print("Reading CSV file: %s" % corpus_file_name)
@@ -317,7 +273,7 @@ class Model(object):
             sentence_start_string = sentence_start_string + sentence_start_token + " "
             sentence_end_string = sentence_end_string + " " + sentence_end_token
 
-        with open(self.save_dir + corpus_file_name + ".csv", 'rt') as f:
+        with open("../data/" + corpus_file_name + ".csv", 'rt') as f:
             reader = csv.reader(f, skipinitialspace=True)
             #reader.next()
 
@@ -326,7 +282,6 @@ class Model(object):
             csv_lines_filtered = filter(None, csv_lines)
 
             # tokenize sentences and attach start/end tokens
-
             sentences = itertools.chain(*[nltk.sent_tokenize(x[0].lower()) for x in csv_lines_filtered])
             sentences = ["%s %s %s %s" % (sentence_start_string, sent, sentence_end_string, sentence_end_string) for sent in sentences]
 
@@ -356,11 +311,6 @@ class Model(object):
         # add start and end sentence tokens
         for i, sent in enumerate(tokenized_sentences):
             tokenized_sentences[i] = [w if w in self.word_to_index else unknown_token for w in sent]
-            #tokenized_sentences[i] = [sentence_start_token for x in range(self.num_timesteps)] + tokenized_sentences[i] + [sentence_end_token for x in range(self.num_timesteps)]
-
-
-
-            #tokenized_sentences[i] = [np.zeros(self.vocab_size) for x in range(self.num_timesteps-1)] + sent + [np.zeros(self.vocab_size) for x in range(self.num_timesteps-1)]
 
         print(tokenized_sentences)
         return tokenized_sentences
@@ -379,119 +329,85 @@ class Model(object):
 
         print("Using a vocab of %d words." % self.vocab_size)
 
-        # save index_to_word and word_to_index as pckls
-        with open(self.save_dir + "INDEX_TO_WORD_" + corpus_file_name + '.pkl', 'wb') as f:
+        # save index_to_word and word_to_index as pkls
+        with open("../models/" + self.current_save_name + "_INDEX_TO_WORD_" + '.pkl', 'wb') as f:
             pickle.dump(self.index_to_word, f, pickle.HIGHEST_PROTOCOL)
-        with open(self.save_dir +  "WORD_TO_INDEX" + corpus_file_name + '.pkl', 'wb') as f:
+        with open("../models/" + self.current_save_name + "_WORD_TO_INDEX" + '.pkl', 'wb') as f:
             pickle.dump(self.word_to_index, f, pickle.HIGHEST_PROTOCOL)
 
 
-    def load_dictionary(self, corpus_file_name):
-        print("loading dictionary")
+    def load_dictionary(self, dictionary_name):
+        print("loading dictionary from: %s" % self.current_save_name)
 
-        with open(self.save_dir + "INDEX_TO_WORD_" + corpus_file_name + '.pkl', 'rb') as f:
+        with open("../models/" + dictionary_name + "_INDEX_TO_WORD_" + '.pkl', 'rb') as f:
             self.index_to_word = pickle.load(f)
-        with open(self.save_dir + "WORD_TO_INDEX" + corpus_file_name + '.pkl', 'rb') as f:
+        with open("../models/" + dictionary_name + "_WORD_TO_INDEX" + '.pkl', 'rb') as f:
             self.word_to_index = pickle.load(f)
 
     def sentences_to_vectors(self, tokenized_sentences):
         vectorized_sentences = []
         for sentence in tokenized_sentences:
-            #vectorized_sentence = [np.zeros(self.vocab_size).tolist() for x in range(self.num_timesteps-1)]
             vectorized_sentence = []
             for word_str in sentence:
-                #innefficient way
                 word_index = self.word_to_index[word_str]
-                #vectorized_word = [1 if x == self.word_to_index[sentence_start_token] else 0 for x in range(self.vocab_size)]
                 vectorized_word = np.zeros(self.vocab_size).tolist()
                 vectorized_word[word_index] = 1
 
                 vectorized_sentence.append(vectorized_word)
 
-            #for x in range(self.num_timesteps-1):
-            #    vectorized_sentence.append(np.zeros(self.vocab_size).tolist())
-
-            #print("vectorized_sentence: " + str(vectorized_sentence))
             vectorized_sentences.append(vectorized_sentence)
 
-
-        #print("START\n\n\n")
-        #print(self.index_to_word[0])
-        #print(self.index_to_word[1])
-        #print(self.word_to_index[sentence_end_token])
-
-        #print("vectorized_sentences[0]: " + str(vectorized_sentences[0]))
         return vectorized_sentences
 
-# def __init__(self, num_io, num_timesteps, num_neurons_inlayer, learning_rate, num_iterations, batch_size, save_dir):
+    def update_save_name(self):
+        self.current_save_name = self.corpus_file_name + "_" + datetime.datetime.now().strftime("%m-%d--%H-%M")
+
+def save_model_object(model):
+    print("Saving model:")
+    # save model as a .pkl
+
+    model.update_save_name()
+    with open("../models/" + model.current_save_name + '.pkl', 'wb') as f:
+        pickle.dump(model, f, pickle.HIGHEST_PROTOCOL)
 
 
+def load_model_object(filename):
+    print("Loading model: %s" % filename)
+    # load model as a .pkl
 
-test_model = Model(num_io=700, num_timesteps=1, num_layers=3 ,num_neurons_inlayer=50,
-                   learning_rate=0.005, num_iterations=5, batch_size=1, save_dir="../data/trump_model/")
-
-#def load_sentences(self, corpus_path, max_sent_len = -1):
-
+    with open("../models/" + filename + ".pkl", 'rb') as f:
+        loaded_model = pickle.load(f)
+    return loaded_model
 
 # TRAINING
-def train():
-    tokenized_sentences = test_model.load_sentences("trump_100_tweets")
-    #print(tokenized_sentences)
-    vectorized_sentences = test_model.sentences_to_vectors(tokenized_sentences)
-    #print(vectorized_sentences)
-    test_model.train_model(vectorized_sentences)
+def train_it():
+
+    model = Model(num_io=700, num_timesteps=1, num_layers=3, num_neurons_inlayer=50,
+                       learning_rate=0.005, num_iterations=2, batch_size=1)
+
+    tokenized_sentences = model.load_sentences("trump_100_tweets")
+    save_model_object(model)
+    model.print_model_info()
+
+    vectorized_sentences = model.sentences_to_vectors(tokenized_sentences)
+    model.print_model_info()
+    model.train_model(vectorized_sentences)
 
 
 
 
 # GENERATING
-def generate():
-    test_model.load_dictionary("trump_100_tweets")
-    test_model.generate_sentences(5)
+def generate_it():
+    dictionary_name = "trump_100_tweets_03-17--21-01"
+    model_name = "trump_100_tweets_03-17--21-01"
+    graph_name = "trump_100_tweets_03-17--21-02"
+
+    test_model = load_model_object(model_name)
+
+    test_model.load_dictionary(dictionary_name)
+    test_model.generate_sentences(graph_name, 5)
 
 
-train()
-#generate()
+train_it()
+#generate_it()
 
-
-"""
-each sentence looks like:
-[
-  [0 0 0 1]
-  [0 0 1 0]
-  [0 1 0 0]
-  [1 0 0 0]
-  [0 1 0 0]
-  [0 0 1 0]
-]
-
-were going to feed in words like this
-[[
-  [0 0 0 1]
-]]
-"""
-
-
-
-###    TO DO    ###
-"""
--start runnable-code practice model
--check what tokenized sentences looks like (shape)
--write function to vectorize sentences so that each word is one-hot-vector
-    (MUST BE ABLE TO FEED INTO MODEL) 
-
--DECIDE:
-    -feed single words, predict next single word (MODEL #1)
-        or
-    -feed ~10 words in a row, predict next timestep forward (MODEL #2)
-
-"""
-
-
-
-
-
-
-
-
-raise SystemExit

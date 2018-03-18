@@ -1,12 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import time
+import datetime
 import random
 
 from collections import namedtuple
 
 import timeit
 
+
+
+print(datetime.datetime.now().strftime("%m-%d--%H-%M"))
+
+
+
+raise SystemExit
 
 arr = np.array([0,1,2,3])
 sharr = np.random.shuffle(arr)
@@ -208,4 +215,19 @@ for iteration in range(10):
 
 #    X_set = full_set[:,:-1].reshape(-1, steps, 1)
 #    y_set = full_set[:,1:].reshape(-1, steps, 1)
+"""
+
+
+"""
+    def graph_mse(self):
+        x_values = np.array(range(len(self.historical_mse)))
+
+        title_str = ("%s, TS=%d, NeurPL=%d, LR=%.4f, Iters=%d" % (self.corpus_file_name, self.num_timesteps, self.num_neurons_inlayer, self.learning_rate, self.num_iterations))
+        plt.plot(x_values, self.historical_mse)
+        plt.title(title_str)
+
+        t = time.asctime(time.localtime(time.time()))
+        save_str = self.save_dir + "graph_" + self.corpus_file_name + "_" + t + "_.png"
+
+        plt.savefig(save_str, format='png', dpi=300)
 """
