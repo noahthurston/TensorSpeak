@@ -9,54 +9,16 @@ import timeit
 
 
 
-print(datetime.datetime.now().strftime("%m-%d--%H-%M"))
-
-
-
-raise SystemExit
-
-arr = np.array([0,1,2,3])
-sharr = np.random.shuffle(arr)
-
-print(arr)
-print(sharr)
-
-raise SystemExit
-
-hist_mse = np.array([10,9,7,3,2,3,2,1])
-x_values = np.array(range(len(hist_mse)))
-
-title_str = ("learning rate = %.2f" % 0.05)
-plt.plot(x_values, hist_mse)
-plt.title(title_str)
-plt.show()
 
 
 
 
+big_arr = np.array([[1,2], [3,4]])
+small_arr = np.array([[5,6]])
 
+sum = np.append(big_arr, small_arr).reshape(-1, 2)
 
-generated_sentence = np.array([[[1,0,0,0] for x in range(3)]])
-print(generated_sentence)
-print(generated_sentence.shape)
-
-print("\n")
-
-
-new = np.array([[[0,0,0,1] for x in range(3)]])
-print(new)
-print(new.shape)
-
-
-print("\n")
-
-cat = np.append(generated_sentence[:, :, :], new[:, -1, :]).reshape((1, -1, 4))
-
-print(cat)
-print(cat.shape)
-
-
-raise SystemExit
+print(sum)
 
 
 
@@ -64,32 +26,6 @@ raise SystemExit
 
 
 
-sent = ['start', 'start', 'start', 'three', 'word', 'sentence', 'end', 'end', 'end']
-
-for word in sent:
-    print(word)
-
-num_timesteps = 3
-
-for word in range(len(sent) - num_timesteps):
-    X_batch = [sent[word:word + num_timesteps]]
-    y_batch = [sent[word + 1:word + 1 + num_timesteps]]
-    print("X_batch:\n" + str(X_batch))
-    print("y_batch:\n" + str(y_batch))
-
-
-sentence = "my long sentence."
-
-num_timesteps = 3
-sent_start_string = ""
-sent_start_token = "START"
-
-for x in range(3):
-    sent_start_string = sent_start_string + sent_start_token + " "
-
-sentence = sent_start_string + sentence
-
-print(sentence)
 
 
 
@@ -97,18 +33,6 @@ print(sentence)
 
 
 
-vocab_size = 10
-target_index = 3
-time = timeit.timeit('innef_vectorized_sent = [1 if x == 3 else 0 for x in range(8000)]', number=10)
-print(time)
-#print(innef_vectorized_sent)
-
-print("\n\n")
-
-#timeit.timeit('vectorized_sent = np.zeros(10)')
-#vectorized_sent = vectorized_sent.tolist()
-#vectorized_sent[target_index] = 1
-#print(vectorized_sent)
 
 """
 

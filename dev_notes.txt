@@ -2,7 +2,7 @@ dev_notes
 
 tensorboard launch command with conda:
 python /anaconda3/envs/conda_TensorSpeak/lib/python3.6/site-packages/tensorflow/tensorboard/tensorboard.py --logdir=./logs/
-
+tensorboard --logdir=./logs/
 
 
 Naming scheme:

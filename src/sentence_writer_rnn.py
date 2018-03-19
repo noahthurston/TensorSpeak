@@ -50,7 +50,8 @@ class Model(object):
         print("num_iterations: %d" % self.num_iterations)
         print("batch_size: %d" % self.batch_size)
         print("vocab_size: %d" % self.vocab_size)
-        print("num_io: %s" % self.corpus_file_name)
+        print("corpus_file_name: %s" % self.corpus_file_name)
+        print("current_save_name: %s" % self.current_save_name)
 
 
     def build_graph(self):
@@ -106,47 +107,24 @@ class Model(object):
                 avg_mse = 0
                 np.random.shuffle(vectorized_sentences)
 
+                sentence_count = 0
                 for sent_index, sentence in enumerate(vectorized_sentences):
+
                     for word in range(len(sentence)-self.num_timesteps):
                         X_batch = [sentence[word:word+self.num_timesteps]]
                         y_batch = [sentence[word+1:word+1+self.num_timesteps]]
                         #print("X_batch:\n" + str(X_batch))
                         #print("y_batch:\n" + str(y_batch) + '\n')
 
-                        # Calculate loss for TensorBoard summary
-                        loss_result = sess.run(loss_summary, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
+                        loss_result, train_result = sess.run([loss_summary, train], feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
+
                         writer.add_summary(loss_result, tensorboard_counter)
                         tensorboard_counter = tensorboard_counter + 1
 
-                        sess.run(train, feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
 
-                        # for graphing MSE without TB
-                        """
-                        if sent_index % 100 == 0:
-                            #print("X_batch:\n" + str(X_batch))
-                            #print("y_batch:\n" + str(y_batch) + '\n')
-
-                            curr_mse = loss.eval(feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
-
-                            #writer.add_summary(curr_mse, tensorboard_counter)
-                            #tensorboard_counter = tensorboard_counter + 1
-
-                            #print(curr_mse)
-                            avg_mse = avg_mse + curr_mse
-                            mse_count = mse_count + 1
-                        """
-
-                    #for graphing MSE without TB
-                    """
-                    if sent_index % 100 == 0:
-                        avg_mse = avg_mse/mse_count
-                        print("Sentence: " + str(sent_index))
-                        print("Avg MSE: " + str(avg_mse))
-                        #self.historical_mse = np.append(self.historical_mse, avg_mse)
-                        mse_count = 0
-                        avg_mse = 0
-                        
-                    """""
+                    if sentence_count % 10 == 0:
+                        print("sentence_count: %d" % sentence_count)
+                    sentence_count = sentence_count + 1
 
             variables_save_file = "../models/" + self.corpus_file_name + "_" + datetime.datetime.now().strftime("%m-%d--%H-%M")
             saver.save(sess,  variables_save_file)
@@ -154,34 +132,8 @@ class Model(object):
         #self.graph_mse()
 
 
-    def generate_sentences(self, graph_name, num_sentences):
+    def generate_sentences(self, graph_name, starting_sentence):
         print("generating sentences")
-
-
-
-        """
-        ### BUILDING MODEL
-        X_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
-        y_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
-
-        def single_cell():
-            return tf.contrib.rnn.BasicLSTMCell(num_units=self.num_neurons_inlayer, activation=tf.nn.relu)
-
-        stacked_lstm = tf.contrib.rnn.MultiRNNCell(
-            [single_cell() for _ in range(self.num_layers)])
-
-        lstm_with_wrapper = tf.contrib.rnn.OutputProjectionWrapper(
-            stacked_lstm,
-            output_size=self.num_io)
-
-        outputs, states = tf.nn.dynamic_rnn(lstm_with_wrapper, X_placeholder, dtype=tf.float32)
-
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=outputs, labels=y_placeholder))
-        optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
-        train = optimizer.minimize(loss)
-        
-        init = tf.global_variables_initializer()
-        """
 
         init, train, loss, X_placeholder, y_placeholder, outputs = self.build_graph()
 
@@ -189,6 +141,30 @@ class Model(object):
 
         print(self.word_to_index)
 
+        print("starting_sentence: " + str(starting_sentence))
+
+        tk = nltk.TweetTokenizer(strip_handles=False, reduce_len=False, preserve_case=False)
+        tokenized_sentence = tk.tokenize(starting_sentence)
+
+        # replace all words not in our vocabulary with the unknown token
+        # add start and end sentence tokens
+        for i, word in enumerate(tokenized_sentence):
+            tokenized_sentence[i] = word if word in self.word_to_index else unknown_token
+
+
+        sentence_start_vector = np.zeros(self.vocab_size)
+        sentence_start_vector[self.word_to_index[sentence_start_token]] = 1
+
+        generated_sentence = np.array([])
+        for x in range(self.num_timesteps):
+            generated_sentence = np.append(generated_sentence, sentence_start_vector).reshape(-1, self.vocab_size)
+
+        for word_str in tokenized_sentence:
+            word_index = self.word_to_index[word_str]
+            vectorized_word = np.zeros(self.vocab_size)
+            vectorized_word[word_index] = 1
+
+            generated_sentence = np.append(generated_sentence, vectorized_word).reshape(-1, self.vocab_size)
 
         ### GENERATING SENTENCES WITH MODEL
         with tf.Session() as sess:
@@ -196,67 +172,53 @@ class Model(object):
 
             saver.restore(sess, "../models/" + graph_name)
 
+            max_sentence_length = 40
+            curr_sentence_length = len(generated_sentence) - self.num_timesteps
 
-            # vectorized version of a single sentence_start_token
-            sentence_start_token_vectorized = np.zeros((self.vocab_size))
-            #sentence_start_token_vectorized[self.word_to_index[sentence_start_token]] = 1
+            #feed sentence seed through model
+            for x in range(len(generated_sentence) - self.num_timesteps):
+                #print("Feeding: " + str(generated_sentence[x:x+self.num_timesteps,:].reshape(1, self.num_timesteps, self.vocab_size)))
+                sess.run(tf.nn.softmax(logits=outputs), feed_dict={X_placeholder: generated_sentence[x:x+self.num_timesteps,:].reshape(1, self.num_timesteps, self.vocab_size)})
 
-            sentence_start_token_vectorized[random.randint(0, self.vocab_size-1)] = 1
+            while (sentence_end_token != self.index_to_word[generated_sentence[-1,:].argmax()]) & (curr_sentence_length < max_sentence_length):
+                # feed in current word, predict next word
+                #print("generated_sentence.shape: " + str(generated_sentence.shape))
 
+                curr_words_vector = generated_sentence[-self.num_timesteps:, :].reshape(1,-1, self.vocab_size)
+                pred_words_vector = sess.run(tf.nn.softmax(logits=outputs), feed_dict={X_placeholder: curr_words_vector})
 
-            for generated_sent_index in range(num_sentences):
-                max_sentence_length = 20
-                curr_sentence_length = 0
+                #print("Fed: " + str(curr_words_vector))
+                #print("Pred: " + str(pred_words_vector))
 
-                #print("Feeding: %s" % self.index_to_word[curr_word_vector.argmax()])
-
-                generated_sentence = np.zeros((1,1,self.vocab_size*2))
-                generated_sentence[0, 0, self.word_to_index[sentence_start_token]] = 1
-                generated_sentence[0, 0, self.vocab_size + random.randint(0,self.vocab_size-1)] = 1
-
-                #print(generated_sentence.shape)
-
-                generated_sentence = generated_sentence.reshape((1, -1, self.vocab_size))
-                #print(generated_sentence.shape)
-
-                curr_words_vector = generated_sentence[:, -self.num_timesteps:, :].reshape(1, self.num_timesteps, self.vocab_size)
-                #print("curr_words_vector.shape " + str(curr_words_vector.shape))
-
-                pred_words_vector = generated_sentence[:, -self.num_timesteps:, :]
                 #print("pred_words_vector.shape " + str(pred_words_vector.shape))
 
-                while (sentence_end_token != self.index_to_word[generated_sentence[0,-1,:].argmax()]) & (curr_sentence_length < max_sentence_length):
-                    # feed in current word, predict next word
-                    pred_words_vector = sess.run(tf.nn.softmax(logits=outputs), feed_dict={X_placeholder: curr_words_vector})
-                    #print("pred_words_vector.shape " + str(pred_words_vector.shape))
+                generated_sentence = np.append(generated_sentence, pred_words_vector[:, -1, :]).reshape( -1, self.vocab_size)
+                #print("generated_sentence.shape " + str(generated_sentence.shape))
 
-                    generated_sentence = np.append(generated_sentence, pred_words_vector[:, -1, :]).reshape((1, -1, self.vocab_size))
-                    #print("generated_sentence.shape " + str(generated_sentence.shape))
-
-                    curr_words_vector = generated_sentence[:, -self.num_timesteps:, :]
-                    #print("curr_words_vector.shape " + str(curr_words_vector.shape))
+                #curr_words_vector = generated_sentence[:, -self.num_timesteps:, :]
+                #print("curr_words_vector.shape " + str(curr_words_vector.shape))
 
 
-                    pred_word_str = self.index_to_word[generated_sentence[0, -1].argmax()]
-                    fed_word_str = self.index_to_word[generated_sentence[0, -2].argmax()]
-                    #print("Word #" + str(curr_sentence_length))
-                    #print("Fed: " + fed_word_str)
-                    #print("Predicted: " + pred_word_str)
+                pred_word_str = self.index_to_word[generated_sentence[0, -1].argmax()]
+                fed_word_str = self.index_to_word[generated_sentence[0, -2].argmax()]
+                #print("Word #" + str(curr_sentence_length))
+                #print("Fed: " + fed_word_str)
+                #print("Predicted: " + pred_word_str)
 
-                    #generated_sentence.append(self.index_to_word[pred_words_vector.argmax()])
+                #generated_sentence.append(self.index_to_word[pred_words_vector.argmax()])
 
-                    curr_sentence_length = curr_sentence_length + 1
-
-
-                translated_sentence = ""
-                for word in generated_sentence[0,:,:]:
-                    translated_sentence = translated_sentence + " " + self.index_to_word[word.argmax()]
+                curr_sentence_length = curr_sentence_length + 1
 
 
-                print('\t' + '\t' + '\t' + '\t' + '\t' + translated_sentence)
+            translated_sentence = ""
+            for word in generated_sentence:
+                translated_sentence = translated_sentence + " " + self.index_to_word[word.argmax()]
 
 
-    def load_sentences(self, corpus_file_name, max_sent_len = -1):
+            print('\t' + '\t' + '\t' + '\t' + '\t' + translated_sentence)
+
+
+    def load_sentences(self, corpus_file_name, max_sent_len = 70):
 
         self.corpus_file_name = corpus_file_name
         self.current_save_name = self.corpus_file_name + "_" + datetime.datetime.now().strftime("%m-%d--%H-%M")
@@ -269,7 +231,7 @@ class Model(object):
         sentence_end_string = ""
         #testing with only 1 start token, then buffering with zero arrays
         #for x in range(self.num_timesteps):
-        for x in range(1):
+        for x in range(self.num_timesteps):
             sentence_start_string = sentence_start_string + sentence_start_token + " "
             sentence_end_string = sentence_end_string + " " + sentence_end_token
 
@@ -283,7 +245,9 @@ class Model(object):
 
             # tokenize sentences and attach start/end tokens
             sentences = itertools.chain(*[nltk.sent_tokenize(x[0].lower()) for x in csv_lines_filtered])
-            sentences = ["%s %s %s %s" % (sentence_start_string, sent, sentence_end_string, sentence_end_string) for sent in sentences]
+            sentences = ["%s %s %s" % (sentence_start_string, sent, sentence_end_string) for sent in sentences]
+
+        #print(sentences)
 
         # tokenize sentences into words using TweetTokenizer to preserve handles
         tk = nltk.TweetTokenizer(strip_handles=False, reduce_len=False, preserve_case=False)
@@ -312,7 +276,7 @@ class Model(object):
         for i, sent in enumerate(tokenized_sentences):
             tokenized_sentences[i] = [w if w in self.word_to_index else unknown_token for w in sent]
 
-        print(tokenized_sentences)
+        #print(tokenized_sentences)
         return tokenized_sentences
 
 
@@ -345,7 +309,29 @@ class Model(object):
             self.word_to_index = pickle.load(f)
 
     def sentences_to_vectors(self, tokenized_sentences):
+
         vectorized_sentences = []
+
+        for sentence in tokenized_sentences:
+            vectorized_sentence = np.array([])
+            for word_str in sentence:
+                word_index = self.word_to_index[word_str]
+                vectorized_word = np.zeros(self.vocab_size).tolist()
+                vectorized_word[word_index] = 1
+
+                vectorized_sentence = np.append(vectorized_sentence, vectorized_word).reshape(-1, self.vocab_size).tolist()
+
+
+            vectorized_sentences.append(vectorized_sentence)
+
+        return vectorized_sentences
+
+    #BACKUP
+    """
+        def sentences_to_vectors(self, tokenized_sentences):
+
+        vectorized_sentences = []
+
         for sentence in tokenized_sentences:
             vectorized_sentence = []
             for word_str in sentence:
@@ -358,6 +344,9 @@ class Model(object):
             vectorized_sentences.append(vectorized_sentence)
 
         return vectorized_sentences
+    
+    """
+
 
     def update_save_name(self):
         self.current_save_name = self.corpus_file_name + "_" + datetime.datetime.now().strftime("%m-%d--%H-%M")
@@ -382,15 +371,14 @@ def load_model_object(filename):
 # TRAINING
 def train_it():
 
-    model = Model(num_io=700, num_timesteps=1, num_layers=3, num_neurons_inlayer=50,
-                       learning_rate=0.005, num_iterations=2, batch_size=1)
+    model = Model(num_io=4000, num_timesteps=3, num_layers=5, num_neurons_inlayer=50,
+                       learning_rate=0.001, num_iterations=1, batch_size=1)
 
-    tokenized_sentences = model.load_sentences("trump_100_tweets")
+    tokenized_sentences = model.load_sentences("trump_10k_tweets")
     save_model_object(model)
     model.print_model_info()
 
     vectorized_sentences = model.sentences_to_vectors(tokenized_sentences)
-    model.print_model_info()
     model.train_model(vectorized_sentences)
 
 
@@ -398,16 +386,24 @@ def train_it():
 
 # GENERATING
 def generate_it():
-    dictionary_name = "trump_100_tweets_03-17--21-01"
-    model_name = "trump_100_tweets_03-17--21-01"
-    graph_name = "trump_100_tweets_03-17--21-02"
+    dictionary_name = "trump_100_tweets_03-18--01-43"
+    model_name = "trump_100_tweets_03-18--01-43"
+    graph_name = "trump_100_tweets_03-18--05-59"
 
-    test_model = load_model_object(model_name)
+    model = load_model_object(model_name)
+    model.print_model_info()
 
-    test_model.load_dictionary(dictionary_name)
-    test_model.generate_sentences(graph_name, 5)
+    model.load_dictionary(dictionary_name)
+    model.generate_sentences(graph_name, "the")
 
+
+def check_model(model_name):
+    model = load_model_object(model_name)
+    model.print_model_info()
 
 train_it()
 #generate_it()
+
+#check_model("test_sentences_03-18--00-41")
+
 
