@@ -9,3 +9,22 @@ Naming scheme:
 source_file_month-day--hour-minute
 
 source activate conda_TensorSpeak
+
+
+Main
+-run through training act
+
+
+Model object
+
+
+
+Preprocessing object
+
+
+
+
+
+noahs_intro.txt
+-3 lines
+-13 unique words including punctuation and sentence start/end

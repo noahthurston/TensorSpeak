@@ -1,2 +1,2 @@
-model_checkpoint_path: "trump_100_tweets_03-18--05-59"
-all_model_checkpoint_paths: "trump_100_tweets_03-18--05-59"
+model_checkpoint_path: "test_sentences_03-26--15-37"
+all_model_checkpoint_paths: "test_sentences_03-26--15-37"
