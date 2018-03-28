@@ -19,46 +19,49 @@ from preprocessing import Preprocessor
 
 # TRAINING
 def train_it():
-
-    vocab_size = 12
+    vocab_size = 8000
     num_timesteps = 3
     num_layers = 5
     num_neurons_inlayer = 50
-    learning_rate = 0.001
-    num_iterations = 3
+    learning_rate = 0.00001
+    #num_iterations = 1
+    num_sentences_to_train = 1000
+    model_name = "trump_10k_tweets_03-26--22-59"
+    graph_name = "trump_10k_tweets_03-27--17-46"
 
-    corpus_file_name = "test_sentences"
+    corpus_file_name = "trump_10k_tweets"
 
     model = Model(corpus_file_name=corpus_file_name, num_io=vocab_size, num_timesteps=num_timesteps, num_layers=num_layers, num_neurons_inlayer=num_neurons_inlayer,
-                       learning_rate=learning_rate, num_iterations=num_iterations, batch_size=1)
+                       learning_rate=learning_rate, batch_size=1)
 
-    preprocessor = Preprocessor()
+    if graph_name == "":
+        preprocessor = Preprocessor()
+        preprocessor.load_sentences(corpus_file_name, num_timesteps, vocab_size)
+        model.indexed_sentences = preprocessor.index_sentences()
+        model.word_to_index, model.index_to_word = preprocessor.word_to_index, preprocessor.index_to_word
+        preprocessor.save()
+        model.print_model_info()
+        model.train_model()
 
-    # def load_sentences(self, corpus_file_name, num_timesteps, vocab_size, max_sent_len=70):
-    preprocessor.load_sentences(corpus_file_name, num_timesteps, vocab_size)
-    model.indexed_sentences = preprocessor.index_sentences()
+    else:
+        model = model.load(model_name)
+        model.print_model_info()
+        model.learning_rate = learning_rate
 
-    model.word_to_index, model.index_to_word = preprocessor.word_to_index, preprocessor.index_to_word
-
-    model.save()
-    preprocessor.save()
-
-    model.print_model_info()
-
-    model.train_model()
+        model.train_model(num_sentences_to_train, save_every=300, graph_name=graph_name)
 
 # GENERATING
 def generate_it():
-    model_name = "test_sentences_03-26--15-36"
-    graph_name = "test_sentences_03-26--15-37"
+    model_name = "trump_10k_tweets_03-26--22-59"
+    graph_name = "trump_10k_tweets_03-27--18-17"
 
     tmp = Model("_", num_io=12, num_timesteps=3, num_layers=5, num_neurons_inlayer=50,
-                       learning_rate=0.001, num_iterations=1, batch_size=1)
+                       learning_rate=0.001, batch_size=1)
 
     model = tmp.load(model_name)
     model.print_model_info()
 
-    model.generate_sentences(graph_name, "the quick")
+    model.generate_sentences(graph_name, "trump")
 
 def check_model(model_name):
     tmp = Model("rando", num_io=12, num_timesteps=3, num_layers=5, num_neurons_inlayer=50,

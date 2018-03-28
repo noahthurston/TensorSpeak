@@ -20,13 +20,13 @@ sentence_start_token = "sentence_start"
 sentence_end_token = "sentence_end"
 
 class Model(object):
-    def __init__(self, corpus_file_name, num_io, num_timesteps, num_layers, num_neurons_inlayer, learning_rate, num_iterations, batch_size):
+    def __init__(self, corpus_file_name, num_io, num_timesteps, num_layers, num_neurons_inlayer, learning_rate, batch_size):
         self.num_io = num_io
         self.num_timesteps = num_timesteps
         self.num_layers = num_layers
         self.num_neurons_inlayer = num_neurons_inlayer
         self.learning_rate = learning_rate
-        self.num_iterations = num_iterations
+        #self.num_iterations = num_iterations
         self.batch_size = batch_size
         self.vocab_size = num_io
         self.corpus_file_name = corpus_file_name
@@ -44,8 +44,8 @@ class Model(object):
         print("num_timesteps: %d" % self.num_timesteps)
         print("num_layers: %d" % self.num_layers)
         print("num_neurons_inlayer: %d" % self.num_neurons_inlayer)
-        print("learning_rate: %.5f" % self.learning_rate)
-        print("num_iterations: %d" % self.num_iterations)
+        print("learning_rate: %.8f" % self.learning_rate)
+        #print("num_iterations: %d" % self.num_iterations)
         print("batch_size: %d" % self.batch_size)
         print("vocab_size: %d" % self.vocab_size)
         print("corpus_file_name: %s" % self.corpus_file_name)
@@ -79,7 +79,7 @@ class Model(object):
 
         return init, train, loss, X_placeholder, y_placeholder, outputs
 
-    def train_model(self):
+    def train_model(self, num_sentences_to_train, save_every=1000, graph_name=""):
         print("Training started at: " + datetime.datetime.now().strftime("%H:%M:%S"))
 
         init, train, loss, X_placeholder, y_placeholder, outputs = self.build_graph()
@@ -91,6 +91,10 @@ class Model(object):
         with tf.Session() as sess:
             sess.run(init)
 
+            if graph_name != "":
+                print("Loading graph: %s" % ("../models/" + graph_name))
+                saver.restore(sess, "../models/" + graph_name)
+
             #TensorBoard code
             summaryMerged = tf.summary.merge_all()
             self.update_save_name()
@@ -98,18 +102,19 @@ class Model(object):
             writer = tf.summary.FileWriter(filename, sess.graph)
             tensorboard_counter = 0
 
+            curr_sentence_in_training = 0
 
-            for iteration in range(self.num_iterations):
-                print("BEGINNING ITERATION #" + str(iteration) + "\tTime: " + datetime.datetime.now().strftime("%H:%M:%S"))
-                mse_count = 0
-                avg_mse = 0
+            #for iteration in range(self.num_iterations):
+            while curr_sentence_in_training < num_sentences_to_train:
+                print("\nITERATION #%d\tTime: %s" % (curr_sentence_in_training/len(self.indexed_sentences), datetime.datetime.now().strftime("%H:%M:%S")))
+                self.save()
                 np.random.shuffle(self.indexed_sentences)
 
-                sentence_count = 0
-                for sent_index, indexed_sentence in enumerate(self.indexed_sentences):
+                sent_index = 0
+                while (sent_index < len(self.indexed_sentences)) & (curr_sentence_in_training < num_sentences_to_train):
 
-                    vectorized_sentence = self.indexed_sentence_to_vectors(indexed_sentence)
-
+                    vectorized_sentence = self.indexed_sentence_to_vectors(self.indexed_sentences[sent_index])
+                    #print(vectorized_sentence)
                     for word in range(len(vectorized_sentence)-self.num_timesteps):
                         X_batch = [vectorized_sentence[word:word+self.num_timesteps]]
                         y_batch = [vectorized_sentence[word+1:word+1+self.num_timesteps]]
@@ -121,11 +126,22 @@ class Model(object):
                         writer.add_summary(loss_result, tensorboard_counter)
                         tensorboard_counter = tensorboard_counter + 1
 
-                    if sentence_count % 10 == 0:
-                        print("sentence_count: %d" % sentence_count)
-                    sentence_count = sentence_count + 1
+                    if sent_index % 50 == 0:
+                        print(sent_index)
 
+                    if sent_index % save_every == 0:
+                        variables_save_file = "../models/" + self.corpus_file_name + "_" + datetime.datetime.now().strftime(
+                            "%m-%d--%H-%M")
+                        saver.save(sess, variables_save_file)
+                        print("\nTrained %d sentences\tTime: %s" % (curr_sentence_in_training, datetime.datetime.now().strftime("%H:%M:%S")))
+                        print("Saved graph to: %s" % variables_save_file)
+                    sent_index = sent_index + 1
+                    curr_sentence_in_training = curr_sentence_in_training + 1
+
+            # save once done training
             variables_save_file = "../models/" + self.corpus_file_name + "_" + datetime.datetime.now().strftime("%m-%d--%H-%M")
+            print("\nTrained %d sentences\tTime: %s" % (curr_sentence_in_training, datetime.datetime.now().strftime("%H:%M:%S")))
+            print("Saved graph to: %s" % variables_save_file)
             saver.save(sess,  variables_save_file)
             writer.close()
         #self.graph_mse()
@@ -230,10 +246,10 @@ class Model(object):
         return vectorized_sentence
 
     def save(self):
-        print("Saving model:")
+        self.update_save_name()
+        print("Saving model: %s" % self.current_save_name)
         # save model as a .pkl
 
-        self.update_save_name()
         with open("../models/" + self.current_save_name + '.pkl', 'wb') as f:
             pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
 

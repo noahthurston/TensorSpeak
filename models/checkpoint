@@ -1,2 +1,6 @@
-model_checkpoint_path: "test_sentences_03-26--15-37"
-all_model_checkpoint_paths: "test_sentences_03-26--15-37"
+model_checkpoint_path: "trump_10k_tweets_03-27--18-17"
+all_model_checkpoint_paths: "trump_10k_tweets_03-27--18-02"
+all_model_checkpoint_paths: "trump_10k_tweets_03-27--18-07"
+all_model_checkpoint_paths: "trump_10k_tweets_03-27--18-11"
+all_model_checkpoint_paths: "trump_10k_tweets_03-27--18-15"
+all_model_checkpoint_paths: "trump_10k_tweets_03-27--18-17"
