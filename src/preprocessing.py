@@ -12,6 +12,20 @@ unknown_token = "unknown_token"
 sentence_start_token = "sentence_start"
 sentence_end_token = "sentence_end"
 
+"""
+Linux commands for combing out weird trump tweeting habits
+
+to get rid of repeating periods:
+cat trump_500_tweets.csv | tr -s '.' >> tmp.csv
+
+to get rid of repeating hythens:
+cat trump_500_tweets.csv | tr -s '-' >> tmp.csv
+
+to get rid of hyperlinks:
+sed 's/http:\/\/.*/ /' < trump_500_tweets.csv >> tp
+
+"""
+
 class Preprocessor(object):
     def __init__(self):
         self.corpus_file_name = ""
@@ -36,12 +50,13 @@ class Preprocessor(object):
 
         # create string of start and end tokens to buffer either side of each sentence
         sentence_start_string = ""
-        sentence_end_string = ""
+        sentence_end_string = " " + sentence_end_token
         # testing with only 1 start token, then buffering with zero arrays
         # for x in range(self.num_timesteps):
         for x in range(num_timesteps):
             sentence_start_string = sentence_start_string + sentence_start_token + " "
-            sentence_end_string = sentence_end_string + " " + sentence_end_token
+            #sentence_end_string = sentence_end_string + " " + sentence_end_token
+
 
         with open("../data/" + corpus_file_name + ".csv", 'rt') as f:
             reader = csv.reader(f, skipinitialspace=True)

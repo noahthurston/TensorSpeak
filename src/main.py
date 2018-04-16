@@ -19,7 +19,7 @@ from preprocessing import Preprocessor
 
 # TRAINING
 def train_it():
-    vocab_size = 3000
+    vocab_size = 1500
     num_timesteps = 3
     num_layers = 3
     num_neurons_inlayer = 200
@@ -29,7 +29,7 @@ def train_it():
     model_name = ""
     graph_name = ""
 
-    corpus_file_name = "trump_1k_tweets"
+    corpus_file_name = "trump_500_tweets"
 
     model = Model(corpus_file_name=corpus_file_name, num_io=vocab_size, num_timesteps=num_timesteps, num_layers=num_layers, num_neurons_inlayer=num_neurons_inlayer,
                        learning_rate=learning_rate, batch_size=1)
