@@ -19,17 +19,17 @@ from preprocessing import Preprocessor
 
 # TRAINING
 def train_it():
-    vocab_size = 8000
+    vocab_size = 3000
     num_timesteps = 3
-    num_layers = 5
-    num_neurons_inlayer = 50
-    learning_rate = 0.00001
+    num_layers = 3
+    num_neurons_inlayer = 200
+    learning_rate = 0.01
     #num_iterations = 1
-    num_sentences_to_train = 1000
-    model_name = "trump_10k_tweets_03-26--22-59"
-    graph_name = "trump_10k_tweets_03-27--17-46"
+    num_sentences_to_train = 10000
+    model_name = ""
+    graph_name = ""
 
-    corpus_file_name = "trump_10k_tweets"
+    corpus_file_name = "trump_1k_tweets"
 
     model = Model(corpus_file_name=corpus_file_name, num_io=vocab_size, num_timesteps=num_timesteps, num_layers=num_layers, num_neurons_inlayer=num_neurons_inlayer,
                        learning_rate=learning_rate, batch_size=1)
@@ -41,7 +41,7 @@ def train_it():
         model.word_to_index, model.index_to_word = preprocessor.word_to_index, preprocessor.index_to_word
         preprocessor.save()
         model.print_model_info()
-        model.train_model()
+        model.train_model(num_sentences_to_train)
 
     else:
         model = model.load(model_name)
@@ -52,8 +52,8 @@ def train_it():
 
 # GENERATING
 def generate_it():
-    model_name = "trump_10k_tweets_03-26--22-59"
-    graph_name = "trump_10k_tweets_03-27--18-17"
+    model_name = "trump_1k_tweets_04-08--11-11"
+    graph_name = "trump_1k_tweets_04-08--11-23"
 
     tmp = Model("_", num_io=12, num_timesteps=3, num_layers=5, num_neurons_inlayer=50,
                        learning_rate=0.001, batch_size=1)
@@ -71,5 +71,5 @@ def check_model(model_name):
     model.print_model_info()
 
 
-#train_it()
-generate_it()
+train_it()
+#generate_it()

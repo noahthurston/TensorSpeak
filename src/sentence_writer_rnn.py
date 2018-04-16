@@ -153,7 +153,7 @@ class Model(object):
 
         saver = tf.train.Saver()
 
-        print(self.word_to_index)
+        #print(self.word_to_index)
 
         print("starting_sentence: " + str(starting_sentence))
 
