@@ -20,7 +20,7 @@ sentence_start_token = "sentence_start"
 sentence_end_token = "sentence_end"
 
 class Model(object):
-    def __init__(self, corpus_file_name, num_io, num_timesteps, num_layers, num_neurons_inlayer, learning_rate, batch_size):
+    def __init__(self, corpus_file_name, num_io, num_timesteps, num_layers, num_neurons_inlayer, learning_rate, batch_size, max_sentence_len=30):
         self.num_io = num_io
         self.num_timesteps = num_timesteps
         self.num_layers = num_layers
@@ -31,6 +31,7 @@ class Model(object):
         self.vocab_size = num_io
         self.corpus_file_name = corpus_file_name
         self.current_save_name = ""
+        self.max_sentence_len = max_sentence_len
 
         # variables initialized later
         self.word_to_index = []
@@ -59,6 +60,7 @@ class Model(object):
         X_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
         y_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
 
+
         def single_cell():
             return tf.contrib.rnn.BasicLSTMCell(num_units=self.num_neurons_inlayer, activation=tf.nn.relu)
 
@@ -71,21 +73,31 @@ class Model(object):
 
         outputs, states = tf.nn.dynamic_rnn(lstm_with_wrapper, X_placeholder, dtype=tf.float32)
 
+        learning_rate = tf.placeholder(tf.float32, shape=[])
+        learning_rate = tf.cast(self.learning_rate, tf.float32)
+
         loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=outputs, labels=y_placeholder))
-        optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
+        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
         train = optimizer.minimize(loss)
 
         init = tf.global_variables_initializer()
 
         return init, train, loss, X_placeholder, y_placeholder, outputs
 
-    def train_model(self, num_sentences_to_train, save_every=1000, graph_name=""):
+    def train_model(self, num_sentences_to_train, save_every=10000, graph_name=""):
         print("Training started at: " + datetime.datetime.now().strftime("%H:%M:%S"))
-
         init, train, loss, X_placeholder, y_placeholder, outputs = self.build_graph()
 
         saver = tf.train.Saver()
         loss_summary = tf.summary.scalar('Loss', loss)
+
+
+
+        # build graph part for calculate full sentence error
+        predicted_sentence_placeholder = tf.placeholder(tf.float32, [None, self.max_sentence_len + 2*self.num_timesteps, self.num_io])
+        training_sentence_placeholder = tf.placeholder(tf.float32, [None, self.max_sentence_len + 2*self.num_timesteps, self.num_io])
+        sentence_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=predicted_sentence_placeholder, labels=training_sentence_placeholder))
+        sentence_loss_summary = tf.summary.scalar('Sentence Loss', sentence_loss)
 
         ### TRAINING MODEL
         with tf.Session() as sess:
@@ -100,50 +112,91 @@ class Model(object):
             self.update_save_name()
             filename = "../logs/" + self.current_save_name
             writer = tf.summary.FileWriter(filename, sess.graph)
-            tensorboard_counter = 0
+            tensorboard_word_counter = 0
 
             curr_sentence_in_training = 0
+
+            learning_rate = tf.placeholder(tf.float32, shape=[])
 
             #for iteration in range(self.num_iterations):
             while curr_sentence_in_training < num_sentences_to_train:
                 print("\nITERATION #%d\tTime: %s" % (curr_sentence_in_training/len(self.indexed_sentences), datetime.datetime.now().strftime("%H:%M:%S")))
+                # saving due to beginning of iteration over training set
+                variables_save_file = "../models/" + self.corpus_file_name + "_" + datetime.datetime.now().strftime(
+                    "%m-%d--%H-%M")
+                saver.save(sess, variables_save_file)
+                print("\nTrained %d sentences\tTime: %s" % (
+                curr_sentence_in_training, datetime.datetime.now().strftime("%H:%M:%S")))
+                print("Saved graph to: %s" % variables_save_file)
                 self.save()
+
                 np.random.shuffle(self.indexed_sentences)
 
                 sent_index = 0
                 while (sent_index < len(self.indexed_sentences)) & (curr_sentence_in_training < num_sentences_to_train):
-
                     vectorized_sentence = self.indexed_sentence_to_vectors(self.indexed_sentences[sent_index])
+                    vectorized_predicted_sentence = self.indexed_sentence_to_vectors(self.indexed_sentences[sent_index])
                     #print(vectorized_sentence)
                     for word in range(len(vectorized_sentence)-self.num_timesteps):
                         X_batch = [vectorized_sentence[word:word+self.num_timesteps]]
                         y_batch = [vectorized_sentence[word+1:word+1+self.num_timesteps]]
-                        #print("X_batch:\n" + str(X_batch))
-                        #print("y_batch:\n" + str(y_batch) + '\n')
 
-                        loss_result, train_result = sess.run([loss_summary, train], feed_dict={X_placeholder: X_batch, y_placeholder: y_batch})
 
-                        writer.add_summary(loss_result, tensorboard_counter)
-                        tensorboard_counter = tensorboard_counter + 1
+                        #learning_rate = tf.cast(self.learning_rate, tf.float32)
+                        loss_result, train_result, predictions = sess.run([loss_summary, train, tf.nn.softmax(logits=outputs)], feed_dict={X_placeholder: X_batch, y_placeholder: y_batch, learning_rate: self.learning_rate})
+                        predictions = predictions[0]
 
-                    if sent_index % 50 == 0:
-                        print(sent_index)
+                        if word == 0:
+                            vectorized_predicted_sentence = X_batch
+                        vectorized_predicted_sentence = np.append(vectorized_predicted_sentence, predictions[-1]).reshape(-1, self.vocab_size)
 
-                    if sent_index % save_every == 0:
+                        #generated_sentence = np.append(generated_sentence, sentence_start_vector).reshape(-1, self.vocab_size)
+
+                        if curr_sentence_in_training % 20 == 0:
+                            print(curr_sentence_in_training)
+                            print("X_batch:\n" + str(X_batch))
+                            print("y_batch:\n" + str(y_batch))
+                            print("predictions (should match y_batch):\n" + str(predictions))
+                            print("vectorized_predicted_sentences (so far)\n" + str(vectorized_predicted_sentence))
+
+                        # add tensorboard summary for the curr word MSE
+                        writer.add_summary(loss_result, tensorboard_word_counter)
+                        tensorboard_word_counter = tensorboard_word_counter + 1
+
+                    # extend vectorized_predicted_predicted sentence and vectorized_sentence to be len() == max_sentence_len+2*num_timesteps
+                    max_sent_vector = self.max_sentence_len+2*self.num_timesteps
+
+                    vectorized_predicted_sentence = np.append(vectorized_predicted_sentence, np.zeros((max_sent_vector-len(vectorized_predicted_sentence),self.vocab_size))).reshape(1, max_sent_vector, self.vocab_size)
+                    vectorized_sentence = np.append(vectorized_sentence, np.zeros((max_sent_vector - len(vectorized_sentence), self.vocab_size))).reshape(1, max_sent_vector, self.vocab_size)
+
+                    #create tensorboard summary for whole sentences error
+                    sentence_loss_result = sess.run(sentence_loss_summary, feed_dict={predicted_sentence_placeholder: vectorized_predicted_sentence, training_sentence_placeholder: vectorized_sentence})
+                    writer.add_summary(sentence_loss_result, tensorboard_word_counter)
+
+                    #if curr_sentence_in_training % 10 == 0:
+                    #    print(sent_index)
+
+                    if curr_sentence_in_training % save_every == 0:
+                        # saving due to the "save_every" condition
                         variables_save_file = "../models/" + self.corpus_file_name + "_" + datetime.datetime.now().strftime(
                             "%m-%d--%H-%M")
                         saver.save(sess, variables_save_file)
                         print("\nTrained %d sentences\tTime: %s" % (curr_sentence_in_training, datetime.datetime.now().strftime("%H:%M:%S")))
                         print("Saved graph to: %s" % variables_save_file)
+                        self.save()
                     sent_index = sent_index + 1
                     curr_sentence_in_training = curr_sentence_in_training + 1
 
             # save once done training
+            print("FINISHED TRAINING, NOW SAVING")
             variables_save_file = "../models/" + self.corpus_file_name + "_" + datetime.datetime.now().strftime("%m-%d--%H-%M")
             print("\nTrained %d sentences\tTime: %s" % (curr_sentence_in_training, datetime.datetime.now().strftime("%H:%M:%S")))
             print("Saved graph to: %s" % variables_save_file)
-            saver.save(sess,  variables_save_file)
+            saver.save(sess, variables_save_file)
             writer.close()
+            self.save()
+        return
+
         #self.graph_mse()
 
     def generate_sentences(self, graph_name, starting_sentence):

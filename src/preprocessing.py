@@ -40,7 +40,7 @@ class Preprocessor(object):
         self.word_to_index = []
         self.index_to_word = []
 
-    def load_sentences(self, corpus_file_name, num_timesteps, vocab_size, max_sent_len=70):
+    def load_sentences(self, corpus_file_name, num_timesteps, vocab_size, max_sent_len=30):
         self.vocab_size = vocab_size
         self.corpus_file_name = corpus_file_name
         self.current_save_name = self.corpus_file_name + "_" + datetime.datetime.now().strftime("%m-%d--%H-%M")
@@ -50,31 +50,40 @@ class Preprocessor(object):
 
         # create string of start and end tokens to buffer either side of each sentence
         sentence_start_string = ""
-        sentence_end_string = " " + sentence_end_token
+        sentence_end_string = ""
         # testing with only 1 start token, then buffering with zero arrays
         # for x in range(self.num_timesteps):
         for x in range(num_timesteps):
             sentence_start_string = sentence_start_string + sentence_start_token + " "
-            #sentence_end_string = sentence_end_string + " " + sentence_end_token
+            sentence_end_string = sentence_end_string + " " + sentence_end_token
 
 
         with open("../data/" + corpus_file_name + ".csv", 'rt') as f:
-            reader = csv.reader(f, skipinitialspace=True)
+            #!reader = csv.reader(f, skipinitialspace=True)
             # reader.next()
 
             # read all csv lines and filter out empty lines
-            csv_lines = [x for x in reader]
-            csv_lines_filtered = filter(None, csv_lines)
+            #!csv_lines = [x for x in reader]
+            #!csv_lines_filtered = filter(None, csv_lines)
+
+            reader = csv.reader(f, skipinitialspace=True)
+            #reader.next()
 
             # tokenize sentences and attach start/end tokens
-            sentences = itertools.chain(*[nltk.sent_tokenize(x[0].lower()) for x in csv_lines_filtered])
+            #sentences = itertools.chain(*[nltk.sent_tokenize(x[0].lower()) for x in csv_lines_filtered])
+            #sentences = ["%s %s %s" % (sentence_start_string, sent, sentence_end_string) for sent in sentences]
+
+            # tokenize sentences and attach start/end tokens
+            #sentences = itertools.chain(*[nltk.sent_tokenize(x[0].lower()) for x in csv_lines_filtered])
+            sentences = itertools.chain(*[nltk.sent_tokenize(x[0].lower()) for x in reader])
             sentences = ["%s %s %s" % (sentence_start_string, sent, sentence_end_string) for sent in sentences]
 
         # print(sentences)
 
         # tokenize sentences into words using TweetTokenizer to preserve handles
-        tk = nltk.TweetTokenizer(strip_handles=False, reduce_len=False, preserve_case=False)
-        self.tokenized_sentences = [tk.tokenize(sent) for sent in sentences]
+        #! tk = nltk.TweetTokenizer(strip_handles=False, reduce_len=False, preserve_case=False)
+        #! self.tokenized_sentences = [tk.tokenize(sent) for sent in sentences]
+        self.tokenized_sentences = [nltk.word_tokenize(sent) for sent in sentences]
 
         # find max sentence length
         max_sent_rec = 0
@@ -98,7 +107,7 @@ class Preprocessor(object):
         for i, sent in enumerate(self.tokenized_sentences):
             self.tokenized_sentences[i] = [w if w in self.word_to_index else unknown_token for w in sent]
 
-        # print(tokenized_sentences)
+        #print(self.tokenized_sentences)
         #return self.tokenized_sentences
 
 
@@ -175,7 +184,7 @@ class Preprocessor(object):
 def test_save():
     preproc = Preprocessor()
 
-    #def load_sentences(self, corpus_file_name, num_timesteps, vocab_size, max_sent_len=70):
+    #def load_sentences(self, corpus_file_name, num_timesteps, vocab_size, max_sent_len=30):
     preproc.load_sentences("noahs_intro", 3, 12)
 
     #def index_sentences(self):
