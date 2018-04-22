@@ -69,6 +69,7 @@ plan for over night:
 6 hrs = 21,600 seconds
 
 
+ID: 0001
 Not changing the learning rate and training for 100k sentences worked!
 trump_1k_tweets_04-17--14-48:
     -1k tweets, 3000/3304 vocab, sentences_len < 70 words
@@ -138,8 +139,15 @@ Trying now with 200 neurons per layer
 200k: trump_2k_tweets_04-21--09-11 (-06)
 
 
-
-
+Re-doing #0001, but with sentence loss, seeing if the memory can survive
+trump_1k_tweets_04-17--14-48:
+    -1k tweets, 3000/3304 vocab, sentences_len < 70 words
+    -LR=0.001 for 100k
+    -5 timesteps
+    -3 layers, 100 nodes each
+    -ended around 2
+    -relatively good, usually end sentences, sometimes doesnt
+    -mostly incoherent word combinations
 
 
 
@@ -162,17 +170,17 @@ NEXT:
 
 # TRAINING
 def train_it():
-    vocab_size = 11
-    num_timesteps = 3
+    vocab_size = 3000
+    num_timesteps = 5
     num_layers = 3
-    num_neurons_inlayer = 10
+    num_neurons_inlayer = 100
     learning_rate = 0.001
     #num_iterations = 1
-    num_sentences_to_train = 200
+    num_sentences_to_train = 100*1000
     model_name = ""
     graph_name = ""
 
-    corpus_file_name = "test_sentences"
+    corpus_file_name = "trump_1k_tweets"
 
     model = Model(corpus_file_name=corpus_file_name, num_io=vocab_size, num_timesteps=num_timesteps, num_layers=num_layers, num_neurons_inlayer=num_neurons_inlayer,
                        learning_rate=learning_rate, batch_size=1)

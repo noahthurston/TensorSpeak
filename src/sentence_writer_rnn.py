@@ -80,24 +80,31 @@ class Model(object):
         optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
         train = optimizer.minimize(loss)
 
+        sentence_loss_pl = tf.placeholder(tf.float32, [None])
+
         init = tf.global_variables_initializer()
 
-        return init, train, loss, X_placeholder, y_placeholder, outputs
+        return init, train, loss, X_placeholder, y_placeholder, outputs, sentence_loss_pl
 
     def train_model(self, num_sentences_to_train, save_every=10000, graph_name=""):
         print("Training started at: " + datetime.datetime.now().strftime("%H:%M:%S"))
-        init, train, loss, X_placeholder, y_placeholder, outputs = self.build_graph()
+        init, train, loss, X_placeholder, y_placeholder, outputs, sentence_loss_pl = self.build_graph()
 
         saver = tf.train.Saver()
         loss_summary = tf.summary.scalar('Loss', loss)
 
+        sentence_loss_list = np.array([])
+        sentence_loss = tf.reduce_mean(tf.convert_to_tensor(sentence_loss_list, np.float32))
+        sentence_loss_summary = tf.summary.scalar('Sentence Loss', sentence_loss)
 
-
+        #MEM
+        """
         # build graph part for calculate full sentence error
         predicted_sentence_placeholder = tf.placeholder(tf.float32, [None, self.max_sentence_len + 2*self.num_timesteps, self.num_io])
         training_sentence_placeholder = tf.placeholder(tf.float32, [None, self.max_sentence_len + 2*self.num_timesteps, self.num_io])
         sentence_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=predicted_sentence_placeholder, labels=training_sentence_placeholder))
-        sentence_loss_summary = tf.summary.scalar('Sentence Loss', sentence_loss)
+        
+        """
 
         ### TRAINING MODEL
         with tf.Session() as sess:
@@ -108,11 +115,12 @@ class Model(object):
                 saver.restore(sess, "../models/" + graph_name)
 
             #TensorBoard code
-            summaryMerged = tf.summary.merge_all()
+            #summaryMerged = tf.summary.merge_all()
             self.update_save_name()
             filename = "../logs/" + self.current_save_name
             writer = tf.summary.FileWriter(filename, sess.graph)
             tensorboard_word_counter = 0
+            tensorboard_sentence_counter = 0
 
             curr_sentence_in_training = 0
 
@@ -135,34 +143,48 @@ class Model(object):
                 sent_index = 0
                 while (sent_index < len(self.indexed_sentences)) & (curr_sentence_in_training < num_sentences_to_train):
                     vectorized_sentence = self.indexed_sentence_to_vectors(self.indexed_sentences[sent_index])
-                    vectorized_predicted_sentence = self.indexed_sentence_to_vectors(self.indexed_sentences[sent_index])
+                    #vectorized_predicted_sentence = self.indexed_sentence_to_vectors(self.indexed_sentences[sent_index])
                     #print(vectorized_sentence)
+                    sentence_loss_list = np.array([])
                     for word in range(len(vectorized_sentence)-self.num_timesteps):
                         X_batch = [vectorized_sentence[word:word+self.num_timesteps]]
                         y_batch = [vectorized_sentence[word+1:word+1+self.num_timesteps]]
 
+                        #loss_result, train_result, predictions = sess.run([loss_summary, train, tf.nn.softmax(logits=outputs)],feed_dict={X_placeholder: X_batch, y_placeholder: y_batch,learning_rate: self.learning_rate})
+                        loss_result, train_result, word_loss = sess.run([loss_summary, train, loss], feed_dict={X_placeholder: X_batch, y_placeholder: y_batch, learning_rate: self.learning_rate})
+                        sentence_loss_list = np.append(sentence_loss_list, word_loss)
 
-                        #learning_rate = tf.cast(self.learning_rate, tf.float32)
-                        loss_result, train_result, predictions = sess.run([loss_summary, train, tf.nn.softmax(logits=outputs)], feed_dict={X_placeholder: X_batch, y_placeholder: y_batch, learning_rate: self.learning_rate})
+
+                        #MEM
+                        """
                         predictions = predictions[0]
-
                         if word == 0:
                             vectorized_predicted_sentence = X_batch
                         vectorized_predicted_sentence = np.append(vectorized_predicted_sentence, predictions[-1]).reshape(-1, self.vocab_size)
+                        """
 
-                        #generated_sentence = np.append(generated_sentence, sentence_start_vector).reshape(-1, self.vocab_size)
-
+                        # debug output
+                        """
                         if curr_sentence_in_training % 20 == 0:
                             print(curr_sentence_in_training)
                             print("X_batch:\n" + str(X_batch))
                             print("y_batch:\n" + str(y_batch))
                             print("predictions (should match y_batch):\n" + str(predictions))
                             print("vectorized_predicted_sentences (so far)\n" + str(vectorized_predicted_sentence))
+                        """
 
                         # add tensorboard summary for the curr word MSE
                         writer.add_summary(loss_result, tensorboard_word_counter)
                         tensorboard_word_counter = tensorboard_word_counter + 1
+                    #print("sentence list loss: " + str(sentence_loss_list))
+                    print("mean sentence loss: %f" % (np.mean(sentence_loss_list)))
+                    #sentence_loss = tf.summary.scalar("Sentence_Loss", tf.cast(np.mean(sentence_loss_list), tf.float32))
+                    sentence_loss_result = sess.run(sentence_loss_summary)
+                    print(sentence_loss_result)
+                    writer.add_summary(sentence_loss_result, tensorboard_word_counter)
 
+                    #MEM
+                    """
                     # extend vectorized_predicted_predicted sentence and vectorized_sentence to be len() == max_sentence_len+2*num_timesteps
                     max_sent_vector = self.max_sentence_len+2*self.num_timesteps
 
@@ -171,10 +193,9 @@ class Model(object):
 
                     #create tensorboard summary for whole sentences error
                     sentence_loss_result = sess.run(sentence_loss_summary, feed_dict={predicted_sentence_placeholder: vectorized_predicted_sentence, training_sentence_placeholder: vectorized_sentence})
-                    writer.add_summary(sentence_loss_result, tensorboard_word_counter)
-
-                    #if curr_sentence_in_training % 10 == 0:
-                    #    print(sent_index)
+                    writer.add_summary(sentence_loss_result, tensorboard_sentence_counter)
+                    tensorboard_sentence_counter = tensorboard_sentence_counter + 1
+                    """
 
                     if curr_sentence_in_training % save_every == 0:
                         # saving due to the "save_every" condition
@@ -197,7 +218,6 @@ class Model(object):
             self.save()
         return
 
-        #self.graph_mse()
 
     def generate_sentences(self, graph_name, starting_sentence):
         print("generating sentences")
