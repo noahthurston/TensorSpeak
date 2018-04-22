@@ -153,34 +153,40 @@ trump_1k_tweets_04-17--14-48:
 
 NEXT:
     vocab_size = 4000
-    num_timesteps = 5
+    num_timesteps = 4
     num_layers = 3
     num_neurons_inlayer = 150
     learning_rate = 0.001
-    #num_iterations = 1
-    num_sentences_to_train = 200000
+    num_sentences_to_train = 200*1000
     model_name = ""
     graph_name = ""
 
 
 
+Calculating sentence error problems:
+    -thought it worked efficiently, but then only did 20k sentences / 8 hours, should've done around 80k
+    -cpu cores were oscillating and hitting 100% usage
+    -only ~16% free ram
+    -graphics card was mostly at 6%, sometimes flicker to 50%
 
+322k words / 21k sentences
+~15.3 words / sentence
+20k sentences / 8 hours
 
 """
 
 # TRAINING
 def train_it():
-    vocab_size = 3000
-    num_timesteps = 5
+    vocab_size = 4000
+    num_timesteps = 4
     num_layers = 3
-    num_neurons_inlayer = 100
+    num_neurons_inlayer = 150
     learning_rate = 0.001
-    #num_iterations = 1
-    num_sentences_to_train = 100*1000
+    num_sentences_to_train = 200*1000
     model_name = ""
     graph_name = ""
 
-    corpus_file_name = "trump_1k_tweets"
+    corpus_file_name = "trump_2k_tweets"
 
     model = Model(corpus_file_name=corpus_file_name, num_io=vocab_size, num_timesteps=num_timesteps, num_layers=num_layers, num_neurons_inlayer=num_neurons_inlayer,
                        learning_rate=learning_rate, batch_size=1)

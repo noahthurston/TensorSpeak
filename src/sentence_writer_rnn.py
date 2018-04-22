@@ -181,7 +181,8 @@ class Model(object):
                     #print("mean sentence loss: %f" % (np.mean(sentence_loss_list)))
                     #sentence_loss = tf.summary.scalar("Sentence_Loss", tf.cast(np.mean(sentence_loss_list), tf.float32))
 
-                    sentence_loss_result_evaluated = tf.reduce_mean(tf.convert_to_tensor(sentence_loss_list, np.float32)).eval()
+                    #sentence_loss_result_evaluated = tf.reduce_mean(tf.convert_to_tensor(sentence_loss_list, np.float32)).eval()
+                    sentence_loss_result_evaluated = np.mean(sentence_loss_list)
 
                     sentence_loss_result = sess.run(sentence_loss_summary, feed_dict={sentence_loss_pl:sentence_loss_result_evaluated})
                     #print(sentence_loss_result)
