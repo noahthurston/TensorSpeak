@@ -80,7 +80,7 @@ class Model(object):
         optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
         train = optimizer.minimize(loss)
 
-        sentence_loss_pl = tf.placeholder(tf.float32, [None])
+        sentence_loss_pl = tf.placeholder(tf.float32, [])
 
         init = tf.global_variables_initializer()
 
@@ -94,8 +94,9 @@ class Model(object):
         loss_summary = tf.summary.scalar('Loss', loss)
 
         sentence_loss_list = np.array([])
-        sentence_loss = tf.reduce_mean(tf.convert_to_tensor(sentence_loss_list, np.float32))
-        sentence_loss_summary = tf.summary.scalar('Sentence Loss', sentence_loss)
+        #sentence_loss = tf.reduce_mean(tf.convert_to_tensor(fed_list, np.float32))
+
+        sentence_loss_summary = tf.summary.scalar('Sentence Loss', sentence_loss_pl)
 
         #MEM
         """
@@ -177,11 +178,15 @@ class Model(object):
                         writer.add_summary(loss_result, tensorboard_word_counter)
                         tensorboard_word_counter = tensorboard_word_counter + 1
                     #print("sentence list loss: " + str(sentence_loss_list))
-                    print("mean sentence loss: %f" % (np.mean(sentence_loss_list)))
+                    #print("mean sentence loss: %f" % (np.mean(sentence_loss_list)))
                     #sentence_loss = tf.summary.scalar("Sentence_Loss", tf.cast(np.mean(sentence_loss_list), tf.float32))
-                    sentence_loss_result = sess.run(sentence_loss_summary)
-                    print(sentence_loss_result)
-                    writer.add_summary(sentence_loss_result, tensorboard_word_counter)
+
+                    sentence_loss_result_evaluated = tf.reduce_mean(tf.convert_to_tensor(sentence_loss_list, np.float32)).eval()
+
+                    sentence_loss_result = sess.run(sentence_loss_summary, feed_dict={sentence_loss_pl:sentence_loss_result_evaluated})
+                    #print(sentence_loss_result)
+                    writer.add_summary(sentence_loss_result, tensorboard_sentence_counter)
+                    tensorboard_sentence_counter = tensorboard_sentence_counter + 1
 
                     #MEM
                     """
