@@ -8,22 +8,60 @@ from collections import namedtuple
 import timeit
 
 
+vocab_size = 3
+
+
+def sample_word_from_softmax(prev_sent, pred_sent):
+    pred_word = pred_sent[0, -1, :]
+
+    random_num = np.random.uniform(0, 1, 1)
+
+    curr_index = 0
+
+    curr_sum = pred_word[curr_index]
+    while curr_sum < random_num:
+        curr_index += 1
+        curr_sum += pred_word[curr_index]
+
+    print(curr_index)
+
+    new_word = np.zeros(vocab_size)
+    new_word[curr_index] = 1
+
+    extended_sentence = np.append(prev_sent, new_word).reshape(1, -1, vocab_size)
+
+    print(extended_sentence)
+    print("\n")
+
+
+def soft_with_temp(distr, temp=0.40):
+    new_distribution = np.zeros(len(distribution))
+
+    sum = 0
+    for val in distr:
+        sum += np.exp(val/temp)
+
+    for index in range(len(new_distribution)):
+        new_distribution[index] = np.exp(distr[index]/temp) / sum
+
+    # print(new_distribution)
+    return new_distribution
+
+
+
+distribution = [0.80, 0.09, 0.05, 0.02, 0.03, 0.01]
+soft_with_temp(distribution)
 
 
 
 
+"""
+prev_sent = np.array([[[1, 0, 0], [0, 1, 0], [0, 0, 1]]])
+pred_sent = np.array([[[0, 1, 0], [0, 0, 1], [0.05, 0.05, 0.9]]])
 
-big_arr = np.array([[1,2], [3,4]])
-small_arr = np.array([[5,6]])
-
-sum = np.append(big_arr, small_arr).reshape(-1, 2)
-
-print(sum)
-
-
-
-
-
+for _ in range(10):
+    sample_word_from_softmax(prev_sent, pred_sent)
+"""
 
 
 
@@ -35,8 +73,6 @@ print(sum)
 
 
 """
-
-
 
 
 ## num inputs and outputs = 5, which would be the same as the vocab size

@@ -173,10 +173,7 @@ Calculating sentence error problems:
 ~15.3 words / sentence
 20k sentences / 8 hours
 
-"""
 
-# TRAINING
-def train_it():
     vocab_size = 4000
     num_timesteps = 4
     num_layers = 3
@@ -187,6 +184,22 @@ def train_it():
     graph_name = ""
 
     corpus_file_name = "trump_2k_tweets"
+
+
+"""
+
+# TRAINING
+def train_it():
+    vocab_size = 500
+    num_timesteps = 4
+    num_layers = 3
+    num_neurons_inlayer = 100
+    learning_rate = 0.001
+    num_sentences_to_train = 200*1000
+    model_name = ""
+    graph_name = ""
+
+    corpus_file_name = "trump_100_tweets"
 
     model = Model(corpus_file_name=corpus_file_name, num_io=vocab_size, num_timesteps=num_timesteps, num_layers=num_layers, num_neurons_inlayer=num_neurons_inlayer,
                        learning_rate=learning_rate, batch_size=1)
@@ -208,7 +221,7 @@ def train_it():
         model.train_model(num_sentences_to_train, save_every=300, graph_name=graph_name)
 
 # GENERATING
-def generate_it(model_name="test_sentences_04-21--11-53", graph_name="test_sentences_04-21--11-53"):
+def generate_it(model_name="trump_2k_tweets_04-22--21-44", graph_name="trump_2k_tweets_04-22--21-44"):
     #model_name = "trump_2k_tweets_04-20--10-07"
     #graph_name = "trump_2k_tweets_04-20--10-10"
 
@@ -216,9 +229,9 @@ def generate_it(model_name="test_sentences_04-21--11-53", graph_name="test_sente
                        learning_rate=0.001, batch_size=1)
 
     model = tmp.load(model_name)
-    model.print_model_info()
+    # model.print_model_info()
 
-    model.generate_sentences(graph_name, "the quick")
+    model.generate_sentences(graph_name, "the")
 
 def check_model(model_name):
     tmp = Model("rando", num_io=12, num_timesteps=3, num_layers=5, num_neurons_inlayer=50,
@@ -228,8 +241,10 @@ def check_model(model_name):
     model.print_model_info()
 
 
-train_it()
-#generate_it()
+# train_it()
+
+for _ in range(1):
+    generate_it()
 
 
 #generate_it(model_name="trump_2k_tweets_04-21--08-25", graph_name="trump_2k_tweets_04-21--08-25")
@@ -253,6 +268,15 @@ sentence_start where is sentence_start sentence_start sentence_start sentence_st
 
 200k: trump_2k_tweets_04-21--09-11 (-06)
 sentence_start where is @ is @ unknown_token unknown_token . with with on @ @ at on on with with on on on on on at on on on on @ on on on on on on on on on on on
+
+
+dip around 1.55M at 100.3K sentence:
+trump_2k_tweets_04-22--16-50
+
+lowest sentence loss at 120k: 
+trump_2k_tweets_04-22--17-58
+100k took 7 hours
+-
 
 
 

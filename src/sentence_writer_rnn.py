@@ -38,6 +38,10 @@ class Model(object):
         self.index_to_word = []
         self.indexed_sentences = []
 
+        # for sampling from distribution
+        # self.prediction_temperature = 0.40
+
+
     def print_model_info(self):
         print("\n")
         print("Model info:")
@@ -83,6 +87,8 @@ class Model(object):
         sentence_loss_pl = tf.placeholder(tf.float32, [])
 
         init = tf.global_variables_initializer()
+
+        # my_checkpointing_config = tf.estimator.RunConfig(keep_checkpoint_max=2)
 
         return init, train, loss, X_placeholder, y_placeholder, outputs, sentence_loss_pl
 
@@ -224,11 +230,49 @@ class Model(object):
             self.save()
         return
 
+    def sample_word_from_softmax(self, prev_sent, pred_sent):
+        pred_word = pred_sent[0, -1, :]
+
+        # pred_word = self.soft_with_temp(pred_word, temp=0.01)
+
+        random_num = np.random.uniform(0, 1, 1)
+
+        curr_index = 0
+
+        curr_sum = pred_word[curr_index]
+        while curr_sum < random_num:
+            curr_index += 1
+            curr_sum += pred_word[curr_index]
+
+        # print(curr_index)
+
+        new_word = np.zeros(self.vocab_size)
+        new_word[curr_index] = 1
+
+        extended_sentence = np.append(prev_sent, new_word).reshape(-1, self.vocab_size)
+
+        # print(extended_sentence)
+        # print("\n")
+
+        return extended_sentence
+
+    def soft_with_temp(self, distribution, temp=0.025):
+        new_distribution = np.zeros(len(distribution))
+
+        sum = 0
+        for val in distribution:
+            sum += np.exp(val / temp)
+
+        for index in range(len(new_distribution)):
+            new_distribution[index] = np.exp(distribution[index] / temp) / sum
+
+        # print(new_distribution)
+        return new_distribution
 
     def generate_sentences(self, graph_name, starting_sentence):
         print("generating sentences")
 
-        init, train, loss, X_placeholder, y_placeholder, outputs = self.build_graph()
+        init, train, loss, X_placeholder, y_placeholder, outputs, sentence_loss_pl = self.build_graph()
 
         saver = tf.train.Saver()
 
@@ -284,15 +328,17 @@ class Model(object):
 
                 #print("pred_words_vector.shape " + str(pred_words_vector.shape))
 
-                generated_sentence = np.append(generated_sentence, pred_words_vector[:, -1, :]).reshape( -1, self.vocab_size)
+                # generated_sentence = np.append(generated_sentence, pred_words_vector[:, -1, :]).reshape(-1, self.vocab_size)
+                generated_sentence = self.sample_word_from_softmax(generated_sentence, pred_words_vector)
+
                 #print("generated_sentence.shape " + str(generated_sentence.shape))
 
                 #curr_words_vector = generated_sentence[:, -self.num_timesteps:, :]
                 #print("curr_words_vector.shape " + str(curr_words_vector.shape))
 
 
-                pred_word_str = self.index_to_word[generated_sentence[0, -1].argmax()]
-                fed_word_str = self.index_to_word[generated_sentence[0, -2].argmax()]
+                #pred_word_str = self.index_to_word[generated_sentence[0, -1].argmax()]
+                #fed_word_str = self.index_to_word[generated_sentence[0, -2].argmax()]
                 #print("Word #" + str(curr_sentence_length))
                 #print("Fed: " + fed_word_str)
                 #print("Predicted: " + pred_word_str)
@@ -308,6 +354,7 @@ class Model(object):
 
 
             print('\t' + '\t' + '\t' + '\t' + '\t' + translated_sentence)
+
 
     def indexed_sentence_to_vectors(self, sentence):
         # this function receives in a sentence in the form (0, 0, 4, 3, 7, 1, 1, 1)

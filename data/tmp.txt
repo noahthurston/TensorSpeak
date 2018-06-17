@@ -1,18 +1,18 @@
 /usr/bin/python3.5 /home/n/TensorSpeak/src/main.py
 Reading CSV file: trump_2k_tweets
-Longest sentence is 180 words
-2585 out of 3003 sentences are 30-words-long or less.
+Longest sentence is 178 words
+2731 out of 3003 sentences are 30-words-long or less.
 creating dictionary
-Found 4365 unique words.
+Found 4642 unique words.
 Using a vocab of 4000 words.
 Saving preprocessor
 
 
 Model info:
 num_io: 4000
-num_timesteps: 5
+num_timesteps: 4
 num_layers: 3
-num_neurons_inlayer: 200
+num_neurons_inlayer: 150
 learning_rate: 0.00100000
 batch_size: 1
 vocab_size: 4000
@@ -20,12 +20,12 @@ corpus_file_name: trump_2k_tweets
 current_save_name:
 
 
-Training started at: 15:20:36
+Training started at: 09:40:17
 Building model
 WARNING:tensorflow:From /home/n/.local/lib/python3.5/site-packages/tensorflow/contrib/learn/python/learn/datasets/base.py:198: retry (from tensorflow.contrib.learn.python.learn.datasets.base) is deprecated and will be removed in a future version.
 Instructions for updating:
 Use the retry module or similar alternatives.
-WARNING:tensorflow:From /home/n/TensorSpeak/src/sentence_writer_rnn.py:77: softmax_cross_entropy_with_logits (from tensorflow.python.ops.nn_ops) is deprecated and will be removed in a future version.
+WARNING:tensorflow:From /home/n/TensorSpeak/src/sentence_writer_rnn.py:79: softmax_cross_entropy_with_logits (from tensorflow.python.ops.nn_ops) is deprecated and will be removed in a future version.
 Instructions for updating:
 
 Future major versions of TensorFlow will allow gradients to flow
@@ -33,718 +33,519 @@ into the labels input on backprop by default.
 
 See tf.nn.softmax_cross_entropy_with_logits_v2.
 
-2018-04-20 15:20:39.203636: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:898] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2018-04-20 15:20:39.203866: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1344] Found device 0 with properties:
+2018-04-22 09:40:19.467445: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:898] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-04-22 09:40:19.467665: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1344] Found device 0 with properties:
 name: GeForce GTX 650 Ti BOOST major: 3 minor: 0 memoryClockRate(GHz): 1.137
 pciBusID: 0000:01:00.0
-totalMemory: 1.95GiB freeMemory: 1.50GiB
-2018-04-20 15:20:39.203881: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1423] Adding visible gpu devices: 0
-2018-04-20 15:20:39.398007: I tensorflow/core/common_runtime/gpu/gpu_device.cc:911] Device interconnect StreamExecutor with strength 1 edge matrix:
-2018-04-20 15:20:39.398039: I tensorflow/core/common_runtime/gpu/gpu_device.cc:917]      0
-2018-04-20 15:20:39.398046: I tensorflow/core/common_runtime/gpu/gpu_device.cc:930] 0:   N
-2018-04-20 15:20:39.398169: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1041] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 1277 MB memory) -> physical GPU (device: 0, name: GeForce GTX 650 Ti BOOST, pci bus id: 0000:01:00.0, compute capability: 3.0)
-
-ITERATION #0	Time: 15:20:39
-Saving model: trump_2k_tweets_04-20--15-20
-0
-
-Trained 0 sentences	Time: 15:20:40
-Saved graph to: ../models/trump_2k_tweets_04-20--15-20
-1000
-2000
-
-ITERATION #1	Time: 15:34:47
-Saving model: trump_2k_tweets_04-20--15-34
-0
-
-Trained 2585 sentences	Time: 15:34:47
-Saved graph to: ../models/trump_2k_tweets_04-20--15-34
-1000
-2000
-
-ITERATION #2	Time: 15:48:55
-Saving model: trump_2k_tweets_04-20--15-48
-0
-
-Trained 5170 sentences	Time: 15:48:56
-Saved graph to: ../models/trump_2k_tweets_04-20--15-48
-1000
-2000
-
-ITERATION #3	Time: 16:03:05
-Saving model: trump_2k_tweets_04-20--16-03
-0
-
-Trained 7755 sentences	Time: 16:03:06
-Saved graph to: ../models/trump_2k_tweets_04-20--16-03
-1000
-2000
-
-ITERATION #4	Time: 16:17:19
-Saving model: trump_2k_tweets_04-20--16-17
-0
-
-Trained 10340 sentences	Time: 16:17:20
-Saved graph to: ../models/trump_2k_tweets_04-20--16-17
-1000
-2000
-
-ITERATION #5	Time: 16:31:29
-Saving model: trump_2k_tweets_04-20--16-31
-0
-
-Trained 12925 sentences	Time: 16:31:29
-Saved graph to: ../models/trump_2k_tweets_04-20--16-31
-1000
-2000
-
-ITERATION #6	Time: 16:45:17
-Saving model: trump_2k_tweets_04-20--16-45
-0
-
-Trained 15510 sentences	Time: 16:45:17
-Saved graph to: ../models/trump_2k_tweets_04-20--16-45
-1000
-2000
-
-ITERATION #7	Time: 16:59:04
-Saving model: trump_2k_tweets_04-20--16-59
-0
-
-Trained 18095 sentences	Time: 16:59:04
-Saved graph to: ../models/trump_2k_tweets_04-20--16-59
-1000
-2000
-
-ITERATION #8	Time: 17:12:51
-Saving model: trump_2k_tweets_04-20--17-12
-0
-
-Trained 20680 sentences	Time: 17:12:51
-Saved graph to: ../models/trump_2k_tweets_04-20--17-12
-1000
-2000
-
-ITERATION #9	Time: 17:26:39
-Saving model: trump_2k_tweets_04-20--17-26
-0
-
-Trained 23265 sentences	Time: 17:26:39
-Saved graph to: ../models/trump_2k_tweets_04-20--17-26
-1000
-2000
-
-ITERATION #10	Time: 17:40:24
-Saving model: trump_2k_tweets_04-20--17-40
-0
-
-Trained 25850 sentences	Time: 17:40:24
-Saved graph to: ../models/trump_2k_tweets_04-20--17-40
-1000
-2000
-
-ITERATION #11	Time: 17:54:05
-Saving model: trump_2k_tweets_04-20--17-54
-0
-
-Trained 28435 sentences	Time: 17:54:06
-Saved graph to: ../models/trump_2k_tweets_04-20--17-54
-1000
-2000
-
-ITERATION #12	Time: 18:08:20
-Saving model: trump_2k_tweets_04-20--18-08
-0
-
-Trained 31020 sentences	Time: 18:08:21
-Saved graph to: ../models/trump_2k_tweets_04-20--18-08
-1000
-2000
-
-ITERATION #13	Time: 18:22:35
-Saving model: trump_2k_tweets_04-20--18-22
-0
-
-Trained 33605 sentences	Time: 18:22:35
-Saved graph to: ../models/trump_2k_tweets_04-20--18-22
-1000
-2000
-
-ITERATION #14	Time: 18:36:44
-Saving model: trump_2k_tweets_04-20--18-36
-0
-
-Trained 36190 sentences	Time: 18:36:45
-Saved graph to: ../models/trump_2k_tweets_04-20--18-36
-1000
-2000
-
-ITERATION #15	Time: 18:50:32
-Saving model: trump_2k_tweets_04-20--18-50
-0
-
-Trained 38775 sentences	Time: 18:50:32
-Saved graph to: ../models/trump_2k_tweets_04-20--18-50
-1000
-2000
-
-ITERATION #16	Time: 19:04:15
-Saving model: trump_2k_tweets_04-20--19-04
-0
-
-Trained 41360 sentences	Time: 19:04:15
-Saved graph to: ../models/trump_2k_tweets_04-20--19-04
-1000
-2000
-
-ITERATION #17	Time: 19:17:56
-Saving model: trump_2k_tweets_04-20--19-17
-0
-
-Trained 43945 sentences	Time: 19:17:56
-Saved graph to: ../models/trump_2k_tweets_04-20--19-17
-1000
-2000
-
-ITERATION #18	Time: 19:31:38
-Saving model: trump_2k_tweets_04-20--19-31
-0
-
-Trained 46530 sentences	Time: 19:31:38
-Saved graph to: ../models/trump_2k_tweets_04-20--19-31
-1000
-2000
-
-ITERATION #19	Time: 19:45:24
-Saving model: trump_2k_tweets_04-20--19-45
-0
-
-Trained 49115 sentences	Time: 19:45:25
-Saved graph to: ../models/trump_2k_tweets_04-20--19-45
-1000
-2000
-
-ITERATION #20	Time: 19:59:21
-Saving model: trump_2k_tweets_04-20--19-59
-0
-
-Trained 51700 sentences	Time: 19:59:22
-Saved graph to: ../models/trump_2k_tweets_04-20--19-59
-1000
-2000
-
-ITERATION #21	Time: 20:13:15
-Saving model: trump_2k_tweets_04-20--20-13
-0
-
-Trained 54285 sentences	Time: 20:13:15
-Saved graph to: ../models/trump_2k_tweets_04-20--20-13
-1000
-2000
-
-ITERATION #22	Time: 20:27:09
-Saving model: trump_2k_tweets_04-20--20-27
-0
-
-Trained 56870 sentences	Time: 20:27:09
-Saved graph to: ../models/trump_2k_tweets_04-20--20-27
-1000
-2000
-
-ITERATION #23	Time: 20:41:04
-Saving model: trump_2k_tweets_04-20--20-41
-0
-
-Trained 59455 sentences	Time: 20:41:05
-Saved graph to: ../models/trump_2k_tweets_04-20--20-41
-1000
-2000
-
-ITERATION #24	Time: 20:54:55
-Saving model: trump_2k_tweets_04-20--20-54
-0
-
-Trained 62040 sentences	Time: 20:54:55
-Saved graph to: ../models/trump_2k_tweets_04-20--20-54
-1000
-2000
-
-ITERATION #25	Time: 21:08:42
-Saving model: trump_2k_tweets_04-20--21-08
-0
-
-Trained 64625 sentences	Time: 21:08:42
-Saved graph to: ../models/trump_2k_tweets_04-20--21-08
-1000
-2000
-
-ITERATION #26	Time: 21:22:37
-Saving model: trump_2k_tweets_04-20--21-22
-0
-
-Trained 67210 sentences	Time: 21:22:38
-Saved graph to: ../models/trump_2k_tweets_04-20--21-22
-1000
-2000
-
-ITERATION #27	Time: 21:36:33
-Saving model: trump_2k_tweets_04-20--21-36
-0
-
-Trained 69795 sentences	Time: 21:36:34
-Saved graph to: ../models/trump_2k_tweets_04-20--21-36
-1000
-2000
-
-ITERATION #28	Time: 21:50:28
-Saving model: trump_2k_tweets_04-20--21-50
-0
-
-Trained 72380 sentences	Time: 21:50:29
-Saved graph to: ../models/trump_2k_tweets_04-20--21-50
-1000
-2000
-
-ITERATION #29	Time: 22:04:16
-Saving model: trump_2k_tweets_04-20--22-04
-0
-
-Trained 74965 sentences	Time: 22:04:16
-Saved graph to: ../models/trump_2k_tweets_04-20--22-04
-1000
-2000
-
-ITERATION #30	Time: 22:18:01
-Saving model: trump_2k_tweets_04-20--22-18
-0
-
-Trained 77550 sentences	Time: 22:18:02
-Saved graph to: ../models/trump_2k_tweets_04-20--22-18
-1000
-2000
-
-ITERATION #31	Time: 22:31:42
-Saving model: trump_2k_tweets_04-20--22-31
-0
-
-Trained 80135 sentences	Time: 22:31:43
-Saved graph to: ../models/trump_2k_tweets_04-20--22-31
-1000
-2000
-
-ITERATION #32	Time: 22:45:27
-Saving model: trump_2k_tweets_04-20--22-45
-0
-
-Trained 82720 sentences	Time: 22:45:27
-Saved graph to: ../models/trump_2k_tweets_04-20--22-45
-1000
-2000
-
-ITERATION #33	Time: 22:59:11
-Saving model: trump_2k_tweets_04-20--22-59
-0
-
-Trained 85305 sentences	Time: 22:59:11
-Saved graph to: ../models/trump_2k_tweets_04-20--22-59
-1000
-2000
-
-ITERATION #34	Time: 23:12:57
-Saving model: trump_2k_tweets_04-20--23-12
-0
-
-Trained 87890 sentences	Time: 23:12:57
-Saved graph to: ../models/trump_2k_tweets_04-20--23-12
-1000
-2000
-
-ITERATION #35	Time: 23:26:43
-Saving model: trump_2k_tweets_04-20--23-26
-0
-
-Trained 90475 sentences	Time: 23:26:44
-Saved graph to: ../models/trump_2k_tweets_04-20--23-26
-1000
-2000
-
-ITERATION #36	Time: 23:40:26
-Saving model: trump_2k_tweets_04-20--23-40
-0
-
-Trained 93060 sentences	Time: 23:40:26
-Saved graph to: ../models/trump_2k_tweets_04-20--23-40
-1000
-2000
-
-ITERATION #37	Time: 23:54:09
-Saving model: trump_2k_tweets_04-20--23-54
-0
-
-Trained 95645 sentences	Time: 23:54:10
-Saved graph to: ../models/trump_2k_tweets_04-20--23-54
-1000
-2000
-
-ITERATION #38	Time: 00:07:53
-Saving model: trump_2k_tweets_04-21--00-07
-0
-
-Trained 98230 sentences	Time: 00:07:53
-Saved graph to: ../models/trump_2k_tweets_04-21--00-07
-1000
-2000
-
-ITERATION #39	Time: 00:21:36
-Saving model: trump_2k_tweets_04-21--00-21
-0
-
-Trained 100815 sentences	Time: 00:21:36
-Saved graph to: ../models/trump_2k_tweets_04-21--00-21
-1000
-2000
-
-ITERATION #40	Time: 00:35:46
-Saving model: trump_2k_tweets_04-21--00-35
-0
-
-Trained 103400 sentences	Time: 00:35:47
-Saved graph to: ../models/trump_2k_tweets_04-21--00-35
-1000
-2000
-
-ITERATION #41	Time: 00:49:56
-Saving model: trump_2k_tweets_04-21--00-49
-0
-
-Trained 105985 sentences	Time: 00:49:56
-Saved graph to: ../models/trump_2k_tweets_04-21--00-49
-1000
-2000
-
-ITERATION #42	Time: 01:03:47
-Saving model: trump_2k_tweets_04-21--01-03
-0
-
-Trained 108570 sentences	Time: 01:03:47
-Saved graph to: ../models/trump_2k_tweets_04-21--01-03
-1000
-2000
-
-ITERATION #43	Time: 01:17:38
-Saving model: trump_2k_tweets_04-21--01-17
-0
-
-Trained 111155 sentences	Time: 01:17:39
-Saved graph to: ../models/trump_2k_tweets_04-21--01-17
-1000
-2000
-
-ITERATION #44	Time: 01:31:30
-Saving model: trump_2k_tweets_04-21--01-31
-0
-
-Trained 113740 sentences	Time: 01:31:30
-Saved graph to: ../models/trump_2k_tweets_04-21--01-31
-1000
-2000
-
-ITERATION #45	Time: 01:45:17
-Saving model: trump_2k_tweets_04-21--01-45
-0
-
-Trained 116325 sentences	Time: 01:45:17
-Saved graph to: ../models/trump_2k_tweets_04-21--01-45
-1000
-2000
-
-ITERATION #46	Time: 01:59:04
-Saving model: trump_2k_tweets_04-21--01-59
-0
-
-Trained 118910 sentences	Time: 01:59:05
-Saved graph to: ../models/trump_2k_tweets_04-21--01-59
-1000
-2000
-
-ITERATION #47	Time: 02:12:46
-Saving model: trump_2k_tweets_04-21--02-12
-0
-
-Trained 121495 sentences	Time: 02:12:46
-Saved graph to: ../models/trump_2k_tweets_04-21--02-12
-1000
-2000
-
-ITERATION #48	Time: 02:26:53
-Saving model: trump_2k_tweets_04-21--02-26
-0
-
-Trained 124080 sentences	Time: 02:26:54
-Saved graph to: ../models/trump_2k_tweets_04-21--02-26
-1000
-2000
-
-ITERATION #49	Time: 02:41:00
-Saving model: trump_2k_tweets_04-21--02-41
-0
-
-Trained 126665 sentences	Time: 02:41:01
-Saved graph to: ../models/trump_2k_tweets_04-21--02-41
-1000
-2000
-
-ITERATION #50	Time: 02:54:51
-Saving model: trump_2k_tweets_04-21--02-54
-0
-
-Trained 129250 sentences	Time: 02:54:51
-Saved graph to: ../models/trump_2k_tweets_04-21--02-54
-1000
-2000
-
-ITERATION #51	Time: 03:08:39
-Saving model: trump_2k_tweets_04-21--03-08
-0
-
-Trained 131835 sentences	Time: 03:08:39
-Saved graph to: ../models/trump_2k_tweets_04-21--03-08
-1000
-2000
-
-ITERATION #52	Time: 03:22:22
-Saving model: trump_2k_tweets_04-21--03-22
-0
-
-Trained 134420 sentences	Time: 03:22:22
-Saved graph to: ../models/trump_2k_tweets_04-21--03-22
-1000
-2000
-
-ITERATION #53	Time: 03:36:09
-Saving model: trump_2k_tweets_04-21--03-36
-0
-
-Trained 137005 sentences	Time: 03:36:10
-Saved graph to: ../models/trump_2k_tweets_04-21--03-36
-1000
-2000
-
-ITERATION #54	Time: 03:49:58
-Saving model: trump_2k_tweets_04-21--03-49
-0
-
-Trained 139590 sentences	Time: 03:49:58
-Saved graph to: ../models/trump_2k_tweets_04-21--03-49
-1000
-2000
-
-ITERATION #55	Time: 04:03:51
-Saving model: trump_2k_tweets_04-21--04-03
-0
-
-Trained 142175 sentences	Time: 04:03:52
-Saved graph to: ../models/trump_2k_tweets_04-21--04-03
-1000
-2000
-
-ITERATION #56	Time: 04:17:44
-Saving model: trump_2k_tweets_04-21--04-17
-0
-
-Trained 144760 sentences	Time: 04:17:45
-Saved graph to: ../models/trump_2k_tweets_04-21--04-17
-1000
-2000
-
-ITERATION #57	Time: 04:31:36
-Saving model: trump_2k_tweets_04-21--04-31
-0
-
-Trained 147345 sentences	Time: 04:31:36
-Saved graph to: ../models/trump_2k_tweets_04-21--04-31
-1000
-2000
-
-ITERATION #58	Time: 04:45:26
-Saving model: trump_2k_tweets_04-21--04-45
-0
-
-Trained 149930 sentences	Time: 04:45:27
-Saved graph to: ../models/trump_2k_tweets_04-21--04-45
-1000
-2000
-
-ITERATION #59	Time: 04:59:16
-Saving model: trump_2k_tweets_04-21--04-59
-0
-
-Trained 152515 sentences	Time: 04:59:16
-Saved graph to: ../models/trump_2k_tweets_04-21--04-59
-1000
-2000
-
-ITERATION #60	Time: 05:13:01
-Saving model: trump_2k_tweets_04-21--05-13
-0
-
-Trained 155100 sentences	Time: 05:13:02
-Saved graph to: ../models/trump_2k_tweets_04-21--05-13
-1000
-2000
-
-ITERATION #61	Time: 05:26:49
-Saving model: trump_2k_tweets_04-21--05-26
-0
-
-Trained 157685 sentences	Time: 05:26:49
-Saved graph to: ../models/trump_2k_tweets_04-21--05-26
-1000
-2000
-
-ITERATION #62	Time: 05:40:32
-Saving model: trump_2k_tweets_04-21--05-40
-0
-
-Trained 160270 sentences	Time: 05:40:32
-Saved graph to: ../models/trump_2k_tweets_04-21--05-40
-1000
-2000
-
-ITERATION #63	Time: 05:54:15
-Saving model: trump_2k_tweets_04-21--05-54
-0
-
-Trained 162855 sentences	Time: 05:54:16
-Saved graph to: ../models/trump_2k_tweets_04-21--05-54
-1000
-2000
-
-ITERATION #64	Time: 06:07:59
-Saving model: trump_2k_tweets_04-21--06-07
-0
-
-Trained 165440 sentences	Time: 06:08:00
-Saved graph to: ../models/trump_2k_tweets_04-21--06-08
-1000
-2000
-
-ITERATION #65	Time: 06:21:42
-Saving model: trump_2k_tweets_04-21--06-21
-0
-
-Trained 168025 sentences	Time: 06:21:43
-Saved graph to: ../models/trump_2k_tweets_04-21--06-21
-1000
-2000
-
-ITERATION #66	Time: 06:35:27
-Saving model: trump_2k_tweets_04-21--06-35
-0
-
-Trained 170610 sentences	Time: 06:35:28
-Saved graph to: ../models/trump_2k_tweets_04-21--06-35
-1000
-2000
-
-ITERATION #67	Time: 06:49:12
-Saving model: trump_2k_tweets_04-21--06-49
-0
-
-Trained 173195 sentences	Time: 06:49:12
-Saved graph to: ../models/trump_2k_tweets_04-21--06-49
-1000
-2000
-
-ITERATION #68	Time: 07:02:55
-Saving model: trump_2k_tweets_04-21--07-02
-0
-
-Trained 175780 sentences	Time: 07:02:56
-Saved graph to: ../models/trump_2k_tweets_04-21--07-02
-1000
-2000
-
-ITERATION #69	Time: 07:16:37
-Saving model: trump_2k_tweets_04-21--07-16
-0
-
-Trained 178365 sentences	Time: 07:16:38
-Saved graph to: ../models/trump_2k_tweets_04-21--07-16
-1000
-2000
-
-ITERATION #70	Time: 07:30:21
-Saving model: trump_2k_tweets_04-21--07-30
-0
-
-Trained 180950 sentences	Time: 07:30:21
-Saved graph to: ../models/trump_2k_tweets_04-21--07-30
-1000
-2000
-
-ITERATION #71	Time: 07:44:05
-Saving model: trump_2k_tweets_04-21--07-44
-0
-
-Trained 183535 sentences	Time: 07:44:05
-Saved graph to: ../models/trump_2k_tweets_04-21--07-44
-1000
-2000
-
-ITERATION #72	Time: 07:57:49
-Saving model: trump_2k_tweets_04-21--07-57
-0
-
-Trained 186120 sentences	Time: 07:57:49
-Saved graph to: ../models/trump_2k_tweets_04-21--07-57
-1000
-2000
-
-ITERATION #73	Time: 08:11:33
-Saving model: trump_2k_tweets_04-21--08-11
-0
-
-Trained 188705 sentences	Time: 08:11:33
-Saved graph to: ../models/trump_2k_tweets_04-21--08-11
-1000
-2000
-
-ITERATION #74	Time: 08:25:17
-Saving model: trump_2k_tweets_04-21--08-25
-0
-
-Trained 191290 sentences	Time: 08:25:17
-Saved graph to: ../models/trump_2k_tweets_04-21--08-25
-1000
-2000
-
-ITERATION #75	Time: 08:39:00
-Saving model: trump_2k_tweets_04-21--08-39
-0
-
-Trained 193875 sentences	Time: 08:39:00
-Saved graph to: ../models/trump_2k_tweets_04-21--08-39
-1000
-2000
-
-ITERATION #76	Time: 08:52:43
-Saving model: trump_2k_tweets_04-21--08-52
-0
-
-Trained 196460 sentences	Time: 08:52:43
-Saved graph to: ../models/trump_2k_tweets_04-21--08-52
-1000
-2000
-
-ITERATION #77	Time: 09:06:25
-Saving model: trump_2k_tweets_04-21--09-06
-0
-
-Trained 199045 sentences	Time: 09:06:26
-Saved graph to: ../models/trump_2k_tweets_04-21--09-06
-
-Trained 200000 sentences	Time: 09:11:33
-Saved graph to: ../models/trump_2k_tweets_04-21--09-11
-
-Process finished with exit code 0
+totalMemory: 1.95GiB freeMemory: 1.41GiB
+2018-04-22 09:40:19.467679: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1423] Adding visible gpu devices: 0
+2018-04-22 09:40:19.658475: I tensorflow/core/common_runtime/gpu/gpu_device.cc:911] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-04-22 09:40:19.658504: I tensorflow/core/common_runtime/gpu/gpu_device.cc:917]      0
+2018-04-22 09:40:19.658511: I tensorflow/core/common_runtime/gpu/gpu_device.cc:930] 0:   N
+2018-04-22 09:40:19.658630: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1041] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 1178 MB memory) -> physical GPU (device: 0, name: GeForce GTX 650 Ti BOOST, pci bus id: 0000:01:00.0, compute capability: 3.0)
+
+ITERATION #0	Time: 09:40:19
+
+Trained 0 sentences	Time: 09:40:20
+Saved graph to: ../models/trump_2k_tweets_04-22--09-40
+Saving model: trump_2k_tweets_04-22--09-40
+
+Trained 0 sentences	Time: 09:40:21
+Saved graph to: ../models/trump_2k_tweets_04-22--09-40
+Saving model: trump_2k_tweets_04-22--09-40
+
+ITERATION #1	Time: 09:51:51
+
+Trained 2731 sentences	Time: 09:51:51
+Saved graph to: ../models/trump_2k_tweets_04-22--09-51
+Saving model: trump_2k_tweets_04-22--09-51
+
+ITERATION #2	Time: 10:03:16
+
+Trained 5462 sentences	Time: 10:03:16
+Saved graph to: ../models/trump_2k_tweets_04-22--10-03
+Saving model: trump_2k_tweets_04-22--10-03
+
+ITERATION #3	Time: 10:14:42
+
+Trained 8193 sentences	Time: 10:14:42
+Saved graph to: ../models/trump_2k_tweets_04-22--10-14
+Saving model: trump_2k_tweets_04-22--10-14
+
+Trained 10000 sentences	Time: 10:22:17
+Saved graph to: ../models/trump_2k_tweets_04-22--10-22
+Saving model: trump_2k_tweets_04-22--10-22
+
+ITERATION #4	Time: 10:26:09
+
+Trained 10924 sentences	Time: 10:26:09
+Saved graph to: ../models/trump_2k_tweets_04-22--10-26
+Saving model: trump_2k_tweets_04-22--10-26
+
+ITERATION #5	Time: 10:37:34
+
+Trained 13655 sentences	Time: 10:37:34
+Saved graph to: ../models/trump_2k_tweets_04-22--10-37
+Saving model: trump_2k_tweets_04-22--10-37
+
+ITERATION #6	Time: 10:49:00
+
+Trained 16386 sentences	Time: 10:49:00
+Saved graph to: ../models/trump_2k_tweets_04-22--10-49
+Saving model: trump_2k_tweets_04-22--10-49
+
+ITERATION #7	Time: 11:00:29
+
+Trained 19117 sentences	Time: 11:00:29
+Saved graph to: ../models/trump_2k_tweets_04-22--11-00
+Saving model: trump_2k_tweets_04-22--11-00
+
+Trained 20000 sentences	Time: 11:04:12
+Saved graph to: ../models/trump_2k_tweets_04-22--11-04
+Saving model: trump_2k_tweets_04-22--11-04
+
+ITERATION #8	Time: 11:11:51
+
+Trained 21848 sentences	Time: 11:11:52
+Saved graph to: ../models/trump_2k_tweets_04-22--11-11
+Saving model: trump_2k_tweets_04-22--11-11
+
+ITERATION #9	Time: 11:23:15
+
+Trained 24579 sentences	Time: 11:23:15
+Saved graph to: ../models/trump_2k_tweets_04-22--11-23
+Saving model: trump_2k_tweets_04-22--11-23
+
+ITERATION #10	Time: 11:34:34
+
+Trained 27310 sentences	Time: 11:34:34
+Saved graph to: ../models/trump_2k_tweets_04-22--11-34
+Saving model: trump_2k_tweets_04-22--11-34
+
+Trained 30000 sentences	Time: 11:45:48
+Saved graph to: ../models/trump_2k_tweets_04-22--11-45
+Saving model: trump_2k_tweets_04-22--11-45
+
+ITERATION #11	Time: 11:45:58
+
+Trained 30041 sentences	Time: 11:45:58
+Saved graph to: ../models/trump_2k_tweets_04-22--11-45
+Saving model: trump_2k_tweets_04-22--11-45
+
+ITERATION #12	Time: 11:57:22
+
+Trained 32772 sentences	Time: 11:57:23
+Saved graph to: ../models/trump_2k_tweets_04-22--11-57
+Saving model: trump_2k_tweets_04-22--11-57
+
+ITERATION #13	Time: 12:08:47
+
+Trained 35503 sentences	Time: 12:08:47
+Saved graph to: ../models/trump_2k_tweets_04-22--12-08
+Saving model: trump_2k_tweets_04-22--12-08
+
+ITERATION #14	Time: 12:20:12
+
+Trained 38234 sentences	Time: 12:20:12
+Saved graph to: ../models/trump_2k_tweets_04-22--12-20
+Saving model: trump_2k_tweets_04-22--12-20
+
+Trained 40000 sentences	Time: 12:27:33
+Saved graph to: ../models/trump_2k_tweets_04-22--12-27
+Saving model: trump_2k_tweets_04-22--12-27
+
+ITERATION #15	Time: 12:31:35
+
+Trained 40965 sentences	Time: 12:31:35
+Saved graph to: ../models/trump_2k_tweets_04-22--12-31
+Saving model: trump_2k_tweets_04-22--12-31
+
+ITERATION #16	Time: 12:43:01
+
+Trained 43696 sentences	Time: 12:43:01
+Saved graph to: ../models/trump_2k_tweets_04-22--12-43
+Saving model: trump_2k_tweets_04-22--12-43
+
+ITERATION #17	Time: 12:54:26
+
+Trained 46427 sentences	Time: 12:54:27
+Saved graph to: ../models/trump_2k_tweets_04-22--12-54
+Saving model: trump_2k_tweets_04-22--12-54
+
+ITERATION #18	Time: 13:05:52
+
+Trained 49158 sentences	Time: 13:05:52
+Saved graph to: ../models/trump_2k_tweets_04-22--13-05
+Saving model: trump_2k_tweets_04-22--13-05
+
+Trained 50000 sentences	Time: 13:09:29
+Saved graph to: ../models/trump_2k_tweets_04-22--13-09
+Saving model: trump_2k_tweets_04-22--13-09
+
+ITERATION #19	Time: 13:16:52
+
+Trained 51889 sentences	Time: 13:16:53
+Saved graph to: ../models/trump_2k_tweets_04-22--13-16
+Saving model: trump_2k_tweets_04-22--13-16
+
+ITERATION #20	Time: 13:27:26
+
+Trained 54620 sentences	Time: 13:27:26
+Saved graph to: ../models/trump_2k_tweets_04-22--13-27
+Saving model: trump_2k_tweets_04-22--13-27
+
+ITERATION #21	Time: 13:38:56
+
+Trained 57351 sentences	Time: 13:38:56
+Saved graph to: ../models/trump_2k_tweets_04-22--13-38
+Saving model: trump_2k_tweets_04-22--13-38
+
+Trained 60000 sentences	Time: 13:50:00
+Saved graph to: ../models/trump_2k_tweets_04-22--13-50
+Saving model: trump_2k_tweets_04-22--13-50
+
+ITERATION #22	Time: 13:50:20
+
+Trained 60082 sentences	Time: 13:50:20
+Saved graph to: ../models/trump_2k_tweets_04-22--13-50
+Saving model: trump_2k_tweets_04-22--13-50
+
+ITERATION #23	Time: 14:01:43
+
+Trained 62813 sentences	Time: 14:01:43
+Saved graph to: ../models/trump_2k_tweets_04-22--14-01
+Saving model: trump_2k_tweets_04-22--14-01
+
+ITERATION #24	Time: 14:12:51
+
+Trained 65544 sentences	Time: 14:12:51
+Saved graph to: ../models/trump_2k_tweets_04-22--14-12
+Saving model: trump_2k_tweets_04-22--14-12
+
+ITERATION #25	Time: 14:23:56
+
+Trained 68275 sentences	Time: 14:23:56
+Saved graph to: ../models/trump_2k_tweets_04-22--14-23
+Saving model: trump_2k_tweets_04-22--14-23
+
+Trained 70000 sentences	Time: 14:31:01
+Saved graph to: ../models/trump_2k_tweets_04-22--14-31
+Saving model: trump_2k_tweets_04-22--14-31
+
+ITERATION #26	Time: 14:35:03
+
+Trained 71006 sentences	Time: 14:35:03
+Saved graph to: ../models/trump_2k_tweets_04-22--14-35
+Saving model: trump_2k_tweets_04-22--14-35
+
+ITERATION #27	Time: 14:46:09
+
+Trained 73737 sentences	Time: 14:46:09
+Saved graph to: ../models/trump_2k_tweets_04-22--14-46
+Saving model: trump_2k_tweets_04-22--14-46
+
+ITERATION #28	Time: 14:57:14
+
+Trained 76468 sentences	Time: 14:57:14
+Saved graph to: ../models/trump_2k_tweets_04-22--14-57
+Saving model: trump_2k_tweets_04-22--14-57
+
+ITERATION #29	Time: 15:08:19
+
+Trained 79199 sentences	Time: 15:08:19
+Saved graph to: ../models/trump_2k_tweets_04-22--15-08
+Saving model: trump_2k_tweets_04-22--15-08
+
+Trained 80000 sentences	Time: 15:11:35
+Saved graph to: ../models/trump_2k_tweets_04-22--15-11
+Saving model: trump_2k_tweets_04-22--15-11
+
+ITERATION #30	Time: 15:19:23
+
+Trained 81930 sentences	Time: 15:19:23
+Saved graph to: ../models/trump_2k_tweets_04-22--15-19
+Saving model: trump_2k_tweets_04-22--15-19
+
+ITERATION #31	Time: 15:30:42
+
+Trained 84661 sentences	Time: 15:30:42
+Saved graph to: ../models/trump_2k_tweets_04-22--15-30
+Saving model: trump_2k_tweets_04-22--15-30
+
+ITERATION #32	Time: 15:42:07
+
+Trained 87392 sentences	Time: 15:42:07
+Saved graph to: ../models/trump_2k_tweets_04-22--15-42
+Saving model: trump_2k_tweets_04-22--15-42
+
+Trained 90000 sentences	Time: 15:53:02
+Saved graph to: ../models/trump_2k_tweets_04-22--15-53
+Saving model: trump_2k_tweets_04-22--15-53
+
+ITERATION #33	Time: 15:53:34
+
+Trained 90123 sentences	Time: 15:53:34
+Saved graph to: ../models/trump_2k_tweets_04-22--15-53
+Saving model: trump_2k_tweets_04-22--15-53
+
+ITERATION #34	Time: 16:04:58
+
+Trained 92854 sentences	Time: 16:04:59
+Saved graph to: ../models/trump_2k_tweets_04-22--16-04
+Saving model: trump_2k_tweets_04-22--16-04
+
+ITERATION #35	Time: 16:16:21
+
+Trained 95585 sentences	Time: 16:16:21
+Saved graph to: ../models/trump_2k_tweets_04-22--16-16
+Saving model: trump_2k_tweets_04-22--16-16
+
+ITERATION #36	Time: 16:27:41
+
+Trained 98316 sentences	Time: 16:27:42
+Saved graph to: ../models/trump_2k_tweets_04-22--16-27
+Saving model: trump_2k_tweets_04-22--16-27
+
+Trained 100000 sentences	Time: 16:34:41
+Saved graph to: ../models/trump_2k_tweets_04-22--16-34
+Saving model: trump_2k_tweets_04-22--16-34
+
+ITERATION #37	Time: 16:39:06
+
+Trained 101047 sentences	Time: 16:39:06
+Saved graph to: ../models/trump_2k_tweets_04-22--16-39
+Saving model: trump_2k_tweets_04-22--16-39
+
+ITERATION #38	Time: 16:50:30
+
+Trained 103778 sentences	Time: 16:50:30
+Saved graph to: ../models/trump_2k_tweets_04-22--16-50
+Saving model: trump_2k_tweets_04-22--16-50
+
+ITERATION #39	Time: 17:01:56
+
+Trained 106509 sentences	Time: 17:01:56
+Saved graph to: ../models/trump_2k_tweets_04-22--17-01
+Saving model: trump_2k_tweets_04-22--17-01
+
+ITERATION #40	Time: 17:13:19
+
+Trained 109240 sentences	Time: 17:13:19
+Saved graph to: ../models/trump_2k_tweets_04-22--17-13
+Saving model: trump_2k_tweets_04-22--17-13
+
+Trained 110000 sentences	Time: 17:16:29
+Saved graph to: ../models/trump_2k_tweets_04-22--17-16
+Saving model: trump_2k_tweets_04-22--17-16
+
+ITERATION #41	Time: 17:24:40
+
+Trained 111971 sentences	Time: 17:24:40
+Saved graph to: ../models/trump_2k_tweets_04-22--17-24
+Saving model: trump_2k_tweets_04-22--17-24
+
+ITERATION #42	Time: 17:36:07
+
+Trained 114702 sentences	Time: 17:36:08
+Saved graph to: ../models/trump_2k_tweets_04-22--17-36
+Saving model: trump_2k_tweets_04-22--17-36
+
+ITERATION #43	Time: 17:47:33
+
+Trained 117433 sentences	Time: 17:47:33
+Saved graph to: ../models/trump_2k_tweets_04-22--17-47
+Saving model: trump_2k_tweets_04-22--17-47
+
+Trained 120000 sentences	Time: 17:58:16
+Saved graph to: ../models/trump_2k_tweets_04-22--17-58
+Saving model: trump_2k_tweets_04-22--17-58
+
+ITERATION #44	Time: 17:58:57
+
+Trained 120164 sentences	Time: 17:58:57
+Saved graph to: ../models/trump_2k_tweets_04-22--17-58
+Saving model: trump_2k_tweets_04-22--17-58
+
+ITERATION #45	Time: 18:10:16
+
+Trained 122895 sentences	Time: 18:10:16
+Saved graph to: ../models/trump_2k_tweets_04-22--18-10
+Saving model: trump_2k_tweets_04-22--18-10
+
+ITERATION #46	Time: 18:21:25
+
+Trained 125626 sentences	Time: 18:21:25
+Saved graph to: ../models/trump_2k_tweets_04-22--18-21
+Saving model: trump_2k_tweets_04-22--18-21
+
+ITERATION #47	Time: 18:32:42
+
+Trained 128357 sentences	Time: 18:32:42
+Saved graph to: ../models/trump_2k_tweets_04-22--18-32
+Saving model: trump_2k_tweets_04-22--18-32
+
+Trained 130000 sentences	Time: 18:39:32
+Saved graph to: ../models/trump_2k_tweets_04-22--18-39
+Saving model: trump_2k_tweets_04-22--18-39
+
+ITERATION #48	Time: 18:44:04
+
+Trained 131088 sentences	Time: 18:44:04
+Saved graph to: ../models/trump_2k_tweets_04-22--18-44
+Saving model: trump_2k_tweets_04-22--18-44
+
+ITERATION #49	Time: 18:55:30
+
+Trained 133819 sentences	Time: 18:55:30
+Saved graph to: ../models/trump_2k_tweets_04-22--18-55
+Saving model: trump_2k_tweets_04-22--18-55
+
+ITERATION #50	Time: 19:06:40
+
+Trained 136550 sentences	Time: 19:06:40
+Saved graph to: ../models/trump_2k_tweets_04-22--19-06
+Saving model: trump_2k_tweets_04-22--19-06
+
+ITERATION #51	Time: 19:17:49
+
+Trained 139281 sentences	Time: 19:17:49
+Saved graph to: ../models/trump_2k_tweets_04-22--19-17
+Saving model: trump_2k_tweets_04-22--19-17
+
+Trained 140000 sentences	Time: 19:20:45
+Saved graph to: ../models/trump_2k_tweets_04-22--19-20
+Saving model: trump_2k_tweets_04-22--19-20
+
+ITERATION #52	Time: 19:28:58
+
+Trained 142012 sentences	Time: 19:28:58
+Saved graph to: ../models/trump_2k_tweets_04-22--19-28
+Saving model: trump_2k_tweets_04-22--19-28
+
+ITERATION #53	Time: 19:40:08
+
+Trained 144743 sentences	Time: 19:40:08
+Saved graph to: ../models/trump_2k_tweets_04-22--19-40
+Saving model: trump_2k_tweets_04-22--19-40
+
+ITERATION #54	Time: 19:51:22
+
+Trained 147474 sentences	Time: 19:51:22
+Saved graph to: ../models/trump_2k_tweets_04-22--19-51
+Saving model: trump_2k_tweets_04-22--19-51
+
+Trained 150000 sentences	Time: 20:01:57
+Saved graph to: ../models/trump_2k_tweets_04-22--20-01
+Saving model: trump_2k_tweets_04-22--20-01
+
+ITERATION #55	Time: 20:02:48
+
+Trained 150205 sentences	Time: 20:02:48
+Saved graph to: ../models/trump_2k_tweets_04-22--20-02
+Saving model: trump_2k_tweets_04-22--20-02
+
+ITERATION #56	Time: 20:14:14
+
+Trained 152936 sentences	Time: 20:14:14
+Saved graph to: ../models/trump_2k_tweets_04-22--20-14
+Saving model: trump_2k_tweets_04-22--20-14
+
+ITERATION #57	Time: 20:25:28
+
+Trained 155667 sentences	Time: 20:25:28
+Saved graph to: ../models/trump_2k_tweets_04-22--20-25
+Saving model: trump_2k_tweets_04-22--20-25
+
+ITERATION #58	Time: 20:36:51
+
+Trained 158398 sentences	Time: 20:36:52
+Saved graph to: ../models/trump_2k_tweets_04-22--20-36
+Saving model: trump_2k_tweets_04-22--20-36
+
+Trained 160000 sentences	Time: 20:43:34
+Saved graph to: ../models/trump_2k_tweets_04-22--20-43
+Saving model: trump_2k_tweets_04-22--20-43
+
+ITERATION #59	Time: 20:48:15
+
+Trained 161129 sentences	Time: 20:48:15
+Saved graph to: ../models/trump_2k_tweets_04-22--20-48
+Saving model: trump_2k_tweets_04-22--20-48
+
+ITERATION #60	Time: 20:59:37
+
+Trained 163860 sentences	Time: 20:59:37
+Saved graph to: ../models/trump_2k_tweets_04-22--20-59
+Saving model: trump_2k_tweets_04-22--20-59
+
+ITERATION #61	Time: 21:10:45
+
+Trained 166591 sentences	Time: 21:10:45
+Saved graph to: ../models/trump_2k_tweets_04-22--21-10
+Saving model: trump_2k_tweets_04-22--21-10
+
+ITERATION #62	Time: 21:22:02
+
+Trained 169322 sentences	Time: 21:22:02
+Saved graph to: ../models/trump_2k_tweets_04-22--21-22
+Saving model: trump_2k_tweets_04-22--21-22
+
+Trained 170000 sentences	Time: 21:24:52
+Saved graph to: ../models/trump_2k_tweets_04-22--21-24
+Saving model: trump_2k_tweets_04-22--21-24
+
+ITERATION #63	Time: 21:33:24
+
+Trained 172053 sentences	Time: 21:33:24
+Saved graph to: ../models/trump_2k_tweets_04-22--21-33
+Saving model: trump_2k_tweets_04-22--21-33
+
+ITERATION #64	Time: 21:44:48
+
+Trained 174784 sentences	Time: 21:44:48
+Saved graph to: ../models/trump_2k_tweets_04-22--21-44
+Saving model: trump_2k_tweets_04-22--21-44
+
+ITERATION #65	Time: 21:56:02
+
+Trained 177515 sentences	Time: 21:56:03
+Saved graph to: ../models/trump_2k_tweets_04-22--21-56
+Saving model: trump_2k_tweets_04-22--21-56
+
+Trained 180000 sentences	Time: 22:06:11
+Saved graph to: ../models/trump_2k_tweets_04-22--22-06
+Saving model: trump_2k_tweets_04-22--22-06
+
+ITERATION #66	Time: 22:07:10
+
+Trained 180246 sentences	Time: 22:07:11
+Saved graph to: ../models/trump_2k_tweets_04-22--22-07
+Saving model: trump_2k_tweets_04-22--22-07
+
+ITERATION #67	Time: 22:18:16
+
+Trained 182977 sentences	Time: 22:18:16
+Saved graph to: ../models/trump_2k_tweets_04-22--22-18
+Saving model: trump_2k_tweets_04-22--22-18
+Traceback (most recent call last):
+  File "/home/n/TensorSpeak/src/main.py", line 224, in <module>
+    tmp = Model("rando", num_io=12, num_timesteps=3, num_layers=5, num_neurons_inlayer=50,
+  File "/home/n/TensorSpeak/src/main.py", line 194, in train_it
+    if graph_name == "":
+  File "/home/n/TensorSpeak/src/sentence_writer_rnn.py", line 155, in train_model
+    loss_result, train_result, word_loss = sess.run([loss_summary, train, loss], feed_dict={X_placeholder: X_batch, y_placeholder: y_batch, learning_rate: self.learning_rate})
+  File "/home/n/.local/lib/python3.5/site-packages/tensorflow/python/client/session.py", line 905, in run
+    run_metadata_ptr)
+  File "/home/n/.local/lib/python3.5/site-packages/tensorflow/python/client/session.py", line 1140, in _run
+    feed_dict_tensor, options, run_metadata)
+  File "/home/n/.local/lib/python3.5/site-packages/tensorflow/python/client/session.py", line 1321, in _do_run
+    run_metadata)
+  File "/home/n/.local/lib/python3.5/site-packages/tensorflow/python/client/session.py", line 1327, in _do_call
+    return fn(*args)
+  File "/home/n/.local/lib/python3.5/site-packages/tensorflow/python/client/session.py", line 1312, in _run_fn
+    options, feed_dict, fetch_list, target_list, run_metadata)
+  File "/home/n/.local/lib/python3.5/site-packages/tensorflow/python/client/session.py", line 1420, in _call_tf_sessionrun
+    status, run_metadata)
+KeyboardInterrupt
+
+Process finished with exit code 1
