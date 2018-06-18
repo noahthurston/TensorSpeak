@@ -222,7 +222,7 @@ def train_it():
 
 # GENERATING
 # def generate_it(model_name="trump_2k_tweets_04-22--21-44", graph_name="trump_2k_tweets_04-22--21-44"): # kinda alright
-def generate_it(model_name="trump_5k_tweets_06-17--15-57", graph_name="trump_5k_tweets_06-17--15-57"):
+def generate_it(model_name="trump_5k_tweets_06-18--07-54", graph_name="trump_5k_tweets_06-18--07-54"):
     # model_name = "trump_2k_tweets_04-20--10-07"
     # graph_name = "trump_2k_tweets_04-20--10-10"
 
