@@ -190,16 +190,16 @@ Calculating sentence error problems:
 
 # TRAINING
 def train_it():
-    vocab_size = 500
+    vocab_size = 6000
     num_timesteps = 4
-    num_layers = 3
-    num_neurons_inlayer = 100
+    num_layers = 2
+    num_neurons_inlayer = 400
     learning_rate = 0.001
-    num_sentences_to_train = 200*1000
+    num_sentences_to_train = 100*1000
     model_name = ""
     graph_name = ""
 
-    corpus_file_name = "trump_100_tweets"
+    corpus_file_name = "trump_5k_tweets"
 
     model = Model(corpus_file_name=corpus_file_name, num_io=vocab_size, num_timesteps=num_timesteps, num_layers=num_layers, num_neurons_inlayer=num_neurons_inlayer,
                        learning_rate=learning_rate, batch_size=1)
@@ -221,9 +221,10 @@ def train_it():
         model.train_model(num_sentences_to_train, save_every=300, graph_name=graph_name)
 
 # GENERATING
-def generate_it(model_name="trump_2k_tweets_04-22--21-44", graph_name="trump_2k_tweets_04-22--21-44"):
-    #model_name = "trump_2k_tweets_04-20--10-07"
-    #graph_name = "trump_2k_tweets_04-20--10-10"
+# def generate_it(model_name="trump_2k_tweets_04-22--21-44", graph_name="trump_2k_tweets_04-22--21-44"): # kinda alright
+def generate_it(model_name="trump_5k_tweets_06-17--15-57", graph_name="trump_5k_tweets_06-17--15-57"):
+    # model_name = "trump_2k_tweets_04-20--10-07"
+    # graph_name = "trump_2k_tweets_04-20--10-10"
 
     tmp = Model("_", num_io=12, num_timesteps=3, num_layers=5, num_neurons_inlayer=50,
                        learning_rate=0.001, batch_size=1)
@@ -231,7 +232,9 @@ def generate_it(model_name="trump_2k_tweets_04-22--21-44", graph_name="trump_2k_
     model = tmp.load(model_name)
     # model.print_model_info()
 
-    model.generate_sentences(graph_name, "the")
+    tf.reset_default_graph()
+    generated_sentence = model.generate_sentences(graph_name, "the")
+    return generated_sentence
 
 def check_model(model_name):
     tmp = Model("rando", num_io=12, num_timesteps=3, num_layers=5, num_neurons_inlayer=50,
@@ -241,44 +244,24 @@ def check_model(model_name):
     model.print_model_info()
 
 
-# train_it()
-
-for _ in range(1):
-    generate_it()
-
-
-#generate_it(model_name="trump_2k_tweets_04-21--08-25", graph_name="trump_2k_tweets_04-21--08-25")
-#generate_it(model_name="trump_2k_tweets_04-21--09-06", graph_name="trump_2k_tweets_04-21--09-11")
-
-
+train_it()
 
 """
-end of last one: 
-sentence_start where is the endorsement unemployment is a workers than a ( products off . ? '' ( books . debt debt . '' sentence_end
+NUM_SENTENCES = 5
 
-MIA:
-95k: trump_2k_tweets_04-20--23-54
-100k: trump_2k_tweets_04-21--00-21
-150k: trump_2k_tweets_04-21--04-45
-
-
-from an hour before finishing:
-sentence_start where is sentence_start sentence_start sentence_start sentence_start sentence_start sentence_start republicans sentence_start sentence_start
+generated_sentences_list = []
+for _ in range(NUM_SENTENCES):
+    generated_sentences_list.append(generate_it())
+for sentence in generated_sentences_list:
+    print(sentence)
+"""
 
 
-200k: trump_2k_tweets_04-21--09-11 (-06)
-sentence_start where is @ is @ unknown_token unknown_token . with with on @ @ at on on with with on on on on on at on on on on @ on on on on on on on on on on on
+""" NOTES
+(1 layer, 400 nodes, 4 ts) worked well for 1k sample with proper sampling
+(2 layers, 400 nodes, 4 ts) was over fit
 
-
-dip around 1.55M at 100.3K sentence:
-trump_2k_tweets_04-22--16-50
-
-lowest sentence loss at 120k: 
-trump_2k_tweets_04-22--17-58
-100k took 7 hours
--
-
-
+Now moving to 5k sample...
 
 
 """
