@@ -157,6 +157,8 @@ class Model(object):
                     writer.add_summary(sentence_loss_result, tensorboard_sentence_counter)
                     tensorboard_sentence_counter = tensorboard_sentence_counter + 1
 
+                    if curr_sentence_in_training % 2500 == 0:
+                        print(curr_sentence_in_training)
 
                     if curr_sentence_in_training % save_every == 0:
                         # saving due to the "save_every" condition
@@ -179,8 +181,16 @@ class Model(object):
             self.save()
         return
 
-    def sample_word_from_softmax(self, prev_sent, pred_sent):
+    def sample_word_from_softmax(self, prev_sent, pred_sent, temperature=0):
         pred_word = pred_sent[0, -1, :]
+
+        if temperature != 0:
+            # if temperature is non-zero, sample normally from dist
+            pred_word = self.soft_with_temp(pred_word, temp=temperature)
+        else:
+            # else just pick the most popular word
+            pred_word = pred_sent[0, -1, :]
+
 
         random_num = np.random.uniform(0, 1, 1)
 
@@ -211,7 +221,7 @@ class Model(object):
         # print(new_distribution)
         return new_distribution
 
-    def generate_sentences(self, graph_name, starting_sentence):
+    def generate_sentences(self, graph_name, starting_sentence, temperature):
         print("generating sentences")
 
         init, train, loss, X_placeholder, y_placeholder, outputs, sentence_loss_pl = self.build_graph()
@@ -261,7 +271,7 @@ class Model(object):
                 curr_words_vector = generated_sentence[-self.num_timesteps:, :].reshape(1,-1, self.vocab_size)
                 pred_words_vector = sess.run(tf.nn.softmax(logits=outputs), feed_dict={X_placeholder: curr_words_vector})
 
-                generated_sentence = self.sample_word_from_softmax(generated_sentence, pred_words_vector)
+                generated_sentence = self.sample_word_from_softmax(generated_sentence, pred_words_vector, temperature=temperature)
 
                 curr_sentence_length = curr_sentence_length + 1
 

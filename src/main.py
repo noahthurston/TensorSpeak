@@ -189,17 +189,20 @@ Calculating sentence error problems:
 """
 
 # TRAINING
-def train_it():
-    vocab_size = 6000
-    num_timesteps = 4
-    num_layers = 2
-    num_neurons_inlayer = 400
-    learning_rate = 0.001
-    num_sentences_to_train = 100*1000
+def train_model():
+    vocab_size = 8000
+    num_timesteps = 3
+    num_layers = 3
+    num_neurons_inlayer = 200
+    learning_rate = 0.0001
+    num_sentences_to_train = 450*1000
+
+    # for loading a model to continue training
     model_name = ""
     graph_name = ""
 
-    corpus_file_name = "trump_5k_tweets"
+
+    corpus_file_name = "trump_10k_tweets"
 
     model = Model(corpus_file_name=corpus_file_name, num_io=vocab_size, num_timesteps=num_timesteps, num_layers=num_layers, num_neurons_inlayer=num_neurons_inlayer,
                        learning_rate=learning_rate, batch_size=1)
@@ -222,7 +225,7 @@ def train_it():
 
 # GENERATING
 # def generate_it(model_name="trump_2k_tweets_04-22--21-44", graph_name="trump_2k_tweets_04-22--21-44"): # kinda alright
-def generate_it(model_name="trump_5k_tweets_06-18--07-54", graph_name="trump_5k_tweets_06-18--07-54"):
+def generate_sentence_with_model(temperature, starting_string, model_name, graph_name):
     # model_name = "trump_2k_tweets_04-20--10-07"
     # graph_name = "trump_2k_tweets_04-20--10-10"
 
@@ -233,7 +236,7 @@ def generate_it(model_name="trump_5k_tweets_06-18--07-54", graph_name="trump_5k_
     # model.print_model_info()
 
     tf.reset_default_graph()
-    generated_sentence = model.generate_sentences(graph_name, "the")
+    generated_sentence = model.generate_sentences(graph_name, starting_string, temperature)
     return generated_sentence
 
 def check_model(model_name):
@@ -244,17 +247,29 @@ def check_model(model_name):
     model.print_model_info()
 
 
-train_it()
-
 """
+# training a model from scratch
+train_model()
+"""
+
+
+# generating sentences using a trained model
+
+MODEL_NAME = "trump_10k_tweets_06-27--07-05"
+GRAPH_NAME = "trump_10k_tweets_06-27--07-05"
+
 NUM_SENTENCES = 5
+TEMPERATURE = 0.06
+STARTING_STRING = "why is"
+
 
 generated_sentences_list = []
 for _ in range(NUM_SENTENCES):
-    generated_sentences_list.append(generate_it())
+    generated_sentences_list.append(generate_sentence_with_model(TEMPERATURE, STARTING_STRING, MODEL_NAME, GRAPH_NAME))
 for sentence in generated_sentences_list:
     print(sentence)
-"""
+
+
 
 
 """ NOTES
