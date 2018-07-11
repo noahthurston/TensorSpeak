@@ -12,19 +12,7 @@ unknown_token = "unknown_token"
 sentence_start_token = "sentence_start"
 sentence_end_token = "sentence_end"
 
-"""
-Linux commands for combing out weird trump tweeting habits
 
-to get rid of repeating periods:
-cat trump_500_tweets.csv | tr -s '.' >> tmp.csv
-
-to get rid of repeating hythens:
-cat trump_500_tweets.csv | tr -s '-' >> tmp.csv
-
-to get rid of hyperlinks:
-sed 's/http:\/\/.*/ /' < trump_500_tweets.csv >> tp
-
-"""
 
 class Preprocessor(object):
     def __init__(self):
@@ -40,7 +28,7 @@ class Preprocessor(object):
         self.word_to_index = []
         self.index_to_word = []
 
-    def load_sentences(self, corpus_file_name, num_timesteps, vocab_size, max_sent_len=30):
+    def load_sentences(self, corpus_file_name, num_timesteps, vocab_size, max_sent_len=30, min_sent_len=8):
         self.vocab_size = vocab_size
         self.corpus_file_name = corpus_file_name
         self.current_save_name = self.corpus_file_name + "_" + datetime.datetime.now().strftime("%m-%d--%H-%M")
@@ -95,9 +83,9 @@ class Preprocessor(object):
         if max_sent_len > 0:
             # get rid of sentences longer than max_sent_len, optional argument
             total_num_sentences_untrimmed = len(self.tokenized_sentences)
-            self.tokenized_sentences = [sent for sent in self.tokenized_sentences if len(sent) <= (max_sent_len)]
-            print("%d out of %d sentences are %d-words-long or less." % (
-                len(self.tokenized_sentences), total_num_sentences_untrimmed, max_sent_len))
+            self.tokenized_sentences = [sent for sent in self.tokenized_sentences if (min_sent_len <= len(sent) <= max_sent_len)]
+            print("%d out of %d sentences are between %d and %d words long in length." % (
+                len(self.tokenized_sentences), total_num_sentences_untrimmed, min_sent_len, max_sent_len))
 
         # create dictionary of words
         self.create_dictionary()

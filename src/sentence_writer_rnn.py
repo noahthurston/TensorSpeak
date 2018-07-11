@@ -1,19 +1,18 @@
-# rnn that can generate sentences
+"""
+RNN that can generate sentences
+Written by Noah Thurston
+"""
 
 import numpy as np
 import tensorflow as tf
-
 import random
 import csv
 import itertools
 import nltk
 #nltk.download('punkt')
 import pickle
-
 import datetime
 
-#to start tensorboard using conda:
-#python /anaconda3/envs/conda_TensorSpeak/lib/python3.6/site-packages/tensorflow/tensorboard/tensorboard.py --logdir=./logs/
 
 unknown_token = "unknown_token"
 sentence_start_token = "sentence_start"
@@ -26,7 +25,6 @@ class Model(object):
         self.num_layers = num_layers
         self.num_neurons_inlayer = num_neurons_inlayer
         self.learning_rate = learning_rate
-        #self.num_iterations = num_iterations
         self.batch_size = batch_size
         self.vocab_size = num_io
         self.corpus_file_name = corpus_file_name
@@ -38,10 +36,6 @@ class Model(object):
         self.index_to_word = []
         self.indexed_sentences = []
 
-        # for sampling from distribution
-        # self.prediction_temperature = 0.40
-
-
     def print_model_info(self):
         print("\n")
         print("Model info:")
@@ -50,7 +44,6 @@ class Model(object):
         print("num_layers: %d" % self.num_layers)
         print("num_neurons_inlayer: %d" % self.num_neurons_inlayer)
         print("learning_rate: %.8f" % self.learning_rate)
-        #print("num_iterations: %d" % self.num_iterations)
         print("batch_size: %d" % self.batch_size)
         print("vocab_size: %d" % self.vocab_size)
         print("corpus_file_name: %s" % self.corpus_file_name)
@@ -64,9 +57,9 @@ class Model(object):
         X_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
         y_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
 
-
+        # with tf.variable_scope('rnn', initializer=tf.variance_scaling_initializer()):
         def single_cell():
-            return tf.contrib.rnn.BasicLSTMCell(num_units=self.num_neurons_inlayer, activation=tf.nn.tanh)
+            return tf.contrib.rnn.BasicLSTMCell(num_units=self.num_neurons_inlayer, activation=tf.nn.elu)
 
         stacked_lstm = tf.contrib.rnn.MultiRNNCell(
             [single_cell() for _ in range(self.num_layers)])
@@ -77,11 +70,8 @@ class Model(object):
 
         outputs, states = tf.nn.dynamic_rnn(lstm_with_wrapper, X_placeholder, dtype=tf.float32)
 
-        learning_rate = tf.placeholder(tf.float32, shape=[])
-        learning_rate = tf.cast(self.learning_rate, tf.float32)
-
         loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=outputs, labels=y_placeholder))
-        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+        optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         train = optimizer.minimize(loss)
 
         sentence_loss_pl = tf.placeholder(tf.float32, [])
@@ -90,7 +80,7 @@ class Model(object):
 
         return init, train, loss, X_placeholder, y_placeholder, outputs, sentence_loss_pl
 
-    def train_model(self, num_sentences_to_train, save_every=10000, graph_name=""):
+    def train_model(self, num_sentences_to_train, save_every=20000, graph_name=""):
         print("Training started at: " + datetime.datetime.now().strftime("%H:%M:%S"))
         init, train, loss, X_placeholder, y_placeholder, outputs, sentence_loss_pl = self.build_graph()
 
@@ -157,6 +147,8 @@ class Model(object):
                     writer.add_summary(sentence_loss_result, tensorboard_sentence_counter)
                     tensorboard_sentence_counter = tensorboard_sentence_counter + 1
 
+                    if curr_sentence_in_training % 2500 == 0:
+                        print(curr_sentence_in_training)
 
                     if curr_sentence_in_training % save_every == 0:
                         # saving due to the "save_every" condition
@@ -179,8 +171,16 @@ class Model(object):
             self.save()
         return
 
-    def sample_word_from_softmax(self, prev_sent, pred_sent):
+    def sample_word_from_softmax(self, prev_sent, pred_sent, temperature=0):
         pred_word = pred_sent[0, -1, :]
+
+        if temperature != 0:
+            # if temperature is non-zero, sample normally from dist
+            pred_word = self.soft_with_temp(pred_word, temp=temperature)
+        else:
+            # else just pick the most popular word
+            pred_word = pred_sent[0, -1, :]
+
 
         random_num = np.random.uniform(0, 1, 1)
 
@@ -211,7 +211,7 @@ class Model(object):
         # print(new_distribution)
         return new_distribution
 
-    def generate_sentences(self, graph_name, starting_sentence):
+    def generate_sentences(self, graph_name, starting_sentence, temperature):
         print("generating sentences")
 
         init, train, loss, X_placeholder, y_placeholder, outputs, sentence_loss_pl = self.build_graph()
@@ -261,7 +261,7 @@ class Model(object):
                 curr_words_vector = generated_sentence[-self.num_timesteps:, :].reshape(1,-1, self.vocab_size)
                 pred_words_vector = sess.run(tf.nn.softmax(logits=outputs), feed_dict={X_placeholder: curr_words_vector})
 
-                generated_sentence = self.sample_word_from_softmax(generated_sentence, pred_words_vector)
+                generated_sentence = self.sample_word_from_softmax(generated_sentence, pred_words_vector, temperature=temperature)
 
                 curr_sentence_length = curr_sentence_length + 1
 
@@ -302,4 +302,3 @@ class Model(object):
 
     def update_save_name(self):
         self.current_save_name = self.corpus_file_name + "_" + datetime.datetime.now().strftime("%m-%d--%H-%M")
-
