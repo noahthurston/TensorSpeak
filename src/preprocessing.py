@@ -1,4 +1,7 @@
-# preprocessing function
+"""
+Defines the Preprocessor object for loading data and parsing it.
+Written by Noah Thurston
+"""
 
 import numpy as np
 import csv
@@ -12,21 +15,12 @@ unknown_token = "unknown_token"
 sentence_start_token = "sentence_start"
 sentence_end_token = "sentence_end"
 
-"""
-Linux commands for combing out weird trump tweeting habits
-
-to get rid of repeating periods:
-cat trump_500_tweets.csv | tr -s '.' >> tmp.csv
-
-to get rid of repeating hythens:
-cat trump_500_tweets.csv | tr -s '-' >> tmp.csv
-
-to get rid of hyperlinks:
-sed 's/http:\/\/.*/ /' < trump_500_tweets.csv >> tp
-
-"""
 
 class Preprocessor(object):
+    """
+    Preprocessor class has attributes that define the vocab size and the file being parsed.
+    Has methods to clean the data, tokenize words into a dictionary and save the parsed data.
+    """
     def __init__(self):
         self.corpus_file_name = ""
         self.current_save_name = ""
@@ -40,7 +34,7 @@ class Preprocessor(object):
         self.word_to_index = []
         self.index_to_word = []
 
-    def load_sentences(self, corpus_file_name, num_timesteps, vocab_size, max_sent_len=30):
+    def load_sentences(self, corpus_file_name, num_timesteps, vocab_size, max_sent_len=30, min_sent_len=8):
         self.vocab_size = vocab_size
         self.corpus_file_name = corpus_file_name
         self.current_save_name = self.corpus_file_name + "_" + datetime.datetime.now().strftime("%m-%d--%H-%M")
@@ -95,9 +89,9 @@ class Preprocessor(object):
         if max_sent_len > 0:
             # get rid of sentences longer than max_sent_len, optional argument
             total_num_sentences_untrimmed = len(self.tokenized_sentences)
-            self.tokenized_sentences = [sent for sent in self.tokenized_sentences if len(sent) <= (max_sent_len)]
-            print("%d out of %d sentences are %d-words-long or less." % (
-                len(self.tokenized_sentences), total_num_sentences_untrimmed, max_sent_len))
+            self.tokenized_sentences = [sent for sent in self.tokenized_sentences if (min_sent_len <= len(sent) <= max_sent_len)]
+            print("%d out of %d sentences are between %d and %d words long in length." % (
+                len(self.tokenized_sentences), total_num_sentences_untrimmed, min_sent_len, max_sent_len))
 
         # create dictionary of words
         self.create_dictionary()
@@ -109,7 +103,6 @@ class Preprocessor(object):
 
         #print(self.tokenized_sentences)
         #return self.tokenized_sentences
-
 
     def create_dictionary(self):
         print("creating dictionary")
@@ -132,20 +125,8 @@ class Preprocessor(object):
             pickle.dump(self.word_to_index, f, pickle.HIGHEST_PROTOCOL)
         """
 
-    # deprecated load dictionary function
-    """
-    def load_dictionary(self, dictionary_name):
-        print("loading dictionary from: %s" % self.current_save_name)
-
-        with open("../models/" + dictionary_name + "_INDEX_TO_WORD_" + '.pkl', 'rb') as f:
-            self.index_to_word = pickle.load(f)
-        with open("../models/" + dictionary_name + "_WORD_TO_INDEX" + '.pkl', 'rb') as f:
-            self.word_to_index = pickle.load(f)
-    """
-
     def index_sentences(self):
         #vectorized_sentences = []
-
 
         for sentence in self.tokenized_sentences:
             indexed_sentence = []
@@ -180,52 +161,34 @@ class Preprocessor(object):
             loaded_preprocessor = pickle.load(f)
         return loaded_preprocessor
 
+    def filter_out_retweets(self):
+        # this function reads in data downloaded from trumptwitterarchive.com
+        # and does some basic cleaning
+        file_dir = "../data/"
+        filename = "trump_2014-curr"
 
-def test_save():
-    preproc = Preprocessor()
+        read_file = open(file_dir + filename + ".csv")
+        write_file = open(file_dir + filename + "_no_rts.csv", "w")
 
-    #def load_sentences(self, corpus_file_name, num_timesteps, vocab_size, max_sent_len=30):
-    preproc.load_sentences("noahs_intro", 3, 12)
+        # iterate through files, ignoring retweets and quote-tweets
+        for line in read_file:
+            if (line[0:2] != 'RT') and (line[0] != '“') and (line[0] != '"'):
+                write_file.write(line)
 
-    #def index_sentences(self):
-    indexed_sentences = preproc.index_sentences()
+        read_file.close()
+        write_file.close()
 
-    print("Word to Index:")
-    print(preproc.word_to_index)
-    print("\n\n")
+        """
+        Data is cleaned further with these bash commands:
 
-    print("Index to Word:")
-    print(preproc.index_to_word)
-    print("\n\n")
+        to get rid of repeating periods:
+        cat trump_2014-curr_no_rts.csv | tr -s '.' >| tmp1.csv
 
-    print("Tokenized Sentences:")
-    print(preproc.tokenized_sentences)
-    print("\n\n")
+        to get rid of repeating hyphens:
+        cat tmp1.csv | tr -s '-' >| tmp2.csv
 
-    print("Indexed Sentences:")
-    print(preproc.indexed_sentences)
-    print("\n\n")
+        to get rid of hyperlinks:
+        sed 's/http:\/\/.*/ /' < tmp2.csv >| tmp3.csv
+        sed 's/https:\/\/.*/ /' < tmp3.csv >| trump_2014-curr_cleaned.csv
+        """
 
-    preproc.save()
-
-def test_load():
-    print("loading test")
-
-    tmp = Preprocessor()
-    loaded_preproc = tmp.load("noahs_intro_03-26--14-19")
-
-    print("Word to Index:")
-    print(loaded_preproc.word_to_index)
-    print("\n\n")
-
-    print("Index to Word:")
-    print(loaded_preproc.index_to_word)
-    print("\n\n")
-
-    print("Tokenized Sentences:")
-    print(loaded_preproc.tokenized_sentences)
-    print("\n\n")
-
-    print("Indexed Sentences:")
-    print(loaded_preproc.indexed_sentences)
-    print("\n\n")

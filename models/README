@@ -1,0 +1,4 @@
+A model trained with the "trump_2014-curr_cleaned.csv" data set can be downloaded from:
+https://s3-us-west-2.amazonaws.com/noahs-ml-data/trump_2014-curr_cleaned_07-11--03-03.tar.gz
+
+Once downloaded, unzip the model and copy the contents to this directory.

@@ -1,7 +1,0 @@
-i
-like
-to
-code
-.
-SENTENCE_START
-SENTENCE_END

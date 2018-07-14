@@ -1,32 +1,33 @@
-# rnn that can generate sentences
+"""
+RNN that can generate sentences.
+Written by Noah Thurston
+"""
 
 import numpy as np
 import tensorflow as tf
-
-import random
 import csv
 import itertools
 import nltk
 #nltk.download('punkt')
 import pickle
-
 import datetime
 
-#to start tensorboard using conda:
-#python /anaconda3/envs/conda_TensorSpeak/lib/python3.6/site-packages/tensorflow/tensorboard/tensorboard.py --logdir=./logs/
 
 unknown_token = "unknown_token"
 sentence_start_token = "sentence_start"
 sentence_end_token = "sentence_end"
 
 class Model(object):
+    """
+    The Model class stores attributes about the RNN and the data it's trained on.
+    Has methods to load, build, and train the tf graph.
+    """
     def __init__(self, corpus_file_name, num_io, num_timesteps, num_layers, num_neurons_inlayer, learning_rate, batch_size, max_sentence_len=30):
         self.num_io = num_io
         self.num_timesteps = num_timesteps
         self.num_layers = num_layers
         self.num_neurons_inlayer = num_neurons_inlayer
         self.learning_rate = learning_rate
-        #self.num_iterations = num_iterations
         self.batch_size = batch_size
         self.vocab_size = num_io
         self.corpus_file_name = corpus_file_name
@@ -38,10 +39,6 @@ class Model(object):
         self.index_to_word = []
         self.indexed_sentences = []
 
-        # for sampling from distribution
-        # self.prediction_temperature = 0.40
-
-
     def print_model_info(self):
         print("\n")
         print("Model info:")
@@ -50,7 +47,6 @@ class Model(object):
         print("num_layers: %d" % self.num_layers)
         print("num_neurons_inlayer: %d" % self.num_neurons_inlayer)
         print("learning_rate: %.8f" % self.learning_rate)
-        #print("num_iterations: %d" % self.num_iterations)
         print("batch_size: %d" % self.batch_size)
         print("vocab_size: %d" % self.vocab_size)
         print("corpus_file_name: %s" % self.corpus_file_name)
@@ -64,9 +60,9 @@ class Model(object):
         X_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
         y_placeholder = tf.placeholder(tf.float32, [None, self.num_timesteps, self.num_io])
 
-
+        # with tf.variable_scope('rnn', initializer=tf.variance_scaling_initializer()):
         def single_cell():
-            return tf.contrib.rnn.BasicLSTMCell(num_units=self.num_neurons_inlayer, activation=tf.nn.tanh)
+            return tf.contrib.rnn.BasicLSTMCell(num_units=self.num_neurons_inlayer, activation=tf.nn.elu)
 
         stacked_lstm = tf.contrib.rnn.MultiRNNCell(
             [single_cell() for _ in range(self.num_layers)])
@@ -77,11 +73,8 @@ class Model(object):
 
         outputs, states = tf.nn.dynamic_rnn(lstm_with_wrapper, X_placeholder, dtype=tf.float32)
 
-        learning_rate = tf.placeholder(tf.float32, shape=[])
-        learning_rate = tf.cast(self.learning_rate, tf.float32)
-
         loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=outputs, labels=y_placeholder))
-        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+        optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         train = optimizer.minimize(loss)
 
         sentence_loss_pl = tf.placeholder(tf.float32, [])
@@ -90,7 +83,7 @@ class Model(object):
 
         return init, train, loss, X_placeholder, y_placeholder, outputs, sentence_loss_pl
 
-    def train_model(self, num_sentences_to_train, save_every=10000, graph_name=""):
+    def train_model(self, num_sentences_to_train, save_every=20000, graph_name=""):
         print("Training started at: " + datetime.datetime.now().strftime("%H:%M:%S"))
         init, train, loss, X_placeholder, y_placeholder, outputs, sentence_loss_pl = self.build_graph()
 
@@ -186,20 +179,31 @@ class Model(object):
 
         if temperature != 0:
             # if temperature is non-zero, sample normally from dist
+            # print("with temp")
             pred_word = self.soft_with_temp(pred_word, temp=temperature)
         else:
             # else just pick the most popular word
+            # print("just pick most popular")
             pred_word = pred_sent[0, -1, :]
 
+        max_to_sample = 1000
+        num_sampled = 0
+        curr_index = self.word_to_index[unknown_token]
 
-        random_num = np.random.uniform(0, 1, 1)
+        while (curr_index == self.word_to_index[unknown_token]) & (
+                num_sampled < max_to_sample):
+            # print("sampling")
+            random_num = np.random.uniform(0, 1, 1)
+            curr_index = 0
+            curr_sum = pred_word[curr_index]
+            while curr_sum < random_num:
+                curr_index += 1
+                curr_sum += pred_word[curr_index]
+            num_sampled += 1
 
-        curr_index = 0
-
-        curr_sum = pred_word[curr_index]
-        while curr_sum < random_num:
-            curr_index += 1
-            curr_sum += pred_word[curr_index]
+        # check if it maxed-out sampling, just pick second largest argmax
+        if num_sampled == max_to_sample:
+            curr_index = pred_word.argsort[-2]
 
         new_word = np.zeros(self.vocab_size)
         new_word[curr_index] = 1
@@ -281,7 +285,6 @@ class Model(object):
 
         return translated_sentence
 
-
     def indexed_sentence_to_vectors(self, sentence):
         # this function receives in a sentence in the form (0, 0, 4, 3, 7, 1, 1, 1)
         # outputs a list of 1 hot vectors
@@ -312,4 +315,3 @@ class Model(object):
 
     def update_save_name(self):
         self.current_save_name = self.corpus_file_name + "_" + datetime.datetime.now().strftime("%m-%d--%H-%M")
-
